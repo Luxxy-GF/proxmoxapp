@@ -1,0 +1,271 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("USER")
+  balance       Float     @default(0.0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  invoices      Invoice[]
+  servers       Server[]
+  subusers      ServerUser[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Node {
+  id            String   @id @default(cuid())
+  name          String
+  address       String
+  proxmoxId     String
+  endpoint      String
+  tokenId       String
+  tokenSecret   String
+  cotermEndpoint String?  // WebSocket URL for coterm (e.g., ws://proxmox:8080)
+  cotermSecret   String?  // JWT secret for token generation
+  cpuUsage      Float    @default(0)
+  ramUsage      Float    @default(0)
+  diskUsage     Float    @default(0)
+  status        String   @default("Offline")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  servers       Server[]
+  ipPools       IPPool[]
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  price        Float
+  billingCycle String   @default("MONTHLY")
+  cpuCores     Int
+  memoryMB     Int
+  diskGB       Int
+  type         String   @default("lxc")
+  templateId   Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  servers      Server[]
+}
+
+model Server {
+  id            String               @id @default(cuid())
+  name          String               // Hostname or label
+  status        String               @default("PROVISIONING")
+  billingStatus String               @default("ACTIVE")
+  vmid          Int?
+  type          String
+  userId        String
+  nodeId        String
+  productId     String?
+  templateId    String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  
+  // General Settings
+  displayName   String?              // User-friendly display name
+  description   String?              // Optional notes/description
+  timezone      String               @default("UTC")
+  
+  // Power & Behavior
+  autoStart     Boolean              @default(false)
+  
+  // Console & Access
+  consoleType   String               @default("xtermjs") // "xtermjs" or "novnc"
+  consoleDisabled Boolean            @default(false)
+  
+  // Backup Settings
+  backupEnabled   Boolean            @default(false)
+  backupSchedule  String             @default("daily") // "daily" or "weekly"
+  backupRetention Int                @default(7)
+  backupMode      String             @default("snapshot") // "snapshot" or "stop"
+  allowRestore    Boolean            @default(true)
+  
+  // Network Settings
+  firewallProfile String?
+  reverseDns      String?
+  
+  // Security Settings
+  sshKeysOnly     Boolean            @default(false)
+  
+  subscription  BillingSubscription?
+  node          Node                 @relation(fields: [nodeId], references: [id])
+  product       Product?             @relation(fields: [productId], references: [id])
+  template      Template?            @relation(fields: [templateId], references: [id])
+  user          User                 @relation(fields: [userId], references: [id])
+  network       ServerNetwork?
+  resources     ServerResources?
+  subusers      ServerUser[]
+  ips           IPAllocation[]
+
+  @@unique([nodeId, vmid])
+}
+
+model ServerResources {
+  id        String   @id @default(cuid())
+  serverId  String   @unique
+  cpuCores  Int
+  memoryMB  Int
+  diskGB    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model ServerNetwork {
+  id         String   @id @default(cuid())
+  serverId   String   @unique
+  ipAddress  String?
+  macAddress String?
+  gateway    String?
+  netmask    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  server     Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model BillingSubscription {
+  id                 String    @id @default(cuid())
+  serverId           String    @unique
+  amount             Float
+  currency           String    @default("USD")
+  status             String
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  server             Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  invoices           Invoice[]
+}
+
+model Invoice {
+  id             String               @id @default(cuid())
+  userId         String
+  subscriptionId String?
+  amount         Float
+  status         String
+  dueDate        DateTime
+  paidAt         DateTime?
+  items          Json?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  subscription   BillingSubscription? @relation(fields: [subscriptionId], references: [id])
+  user           User                 @relation(fields: [userId], references: [id])
+}
+
+model TemplateGroup {
+  id        String     @id @default(cuid())
+  name      String
+  templates Template[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Template {
+  id        String        @id @default(cuid())
+  name      String
+  vmid      Int
+  image     String?       // URL for the OS logo
+  type      String        @default("qemu") // "lxc" or "qemu"
+  groupId   String
+  group     TemplateGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  servers   Server[]
+}
+
+model ServerUser {
+  id          String   @id @default(cuid())
+  serverId    String
+  userId      String
+  permissions Json     @default("[]") // Array of permission strings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  server      Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, userId])
+}
+
+model IPPool {
+  id          String   @id @default(cuid())
+  name        String
+  nodeId      String
+  ipVersion   String   @default("v4") // "v4" or "v6"
+  startIP     String
+  endIP       String
+  gateway     String
+  netmask     String
+  bridge      String   @default("vmbr0")
+  vlan        Int?
+  dns         String?
+  mtu         Int?
+  enabled     Boolean  @default(true)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  node        Node           @relation(fields: [nodeId], references: [id])
+  allocations IPAllocation[]
+}
+
+model IPAllocation {
+  id        String   @id @default(cuid())
+  poolId    String
+  serverId  String
+  ipAddress String
+  createdAt DateTime @default(now())
+
+  pool      IPPool   @relation(fields: [poolId], references: [id])
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@unique([poolId, ipAddress]) // Prevent duplicate allocation of same IP
+}
