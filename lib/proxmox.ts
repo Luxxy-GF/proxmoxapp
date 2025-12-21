@@ -220,6 +220,14 @@ export async function resumeVm(node: Node, vmid: number, type: "lxc" | "qemu") {
     return callProxmoxApi(node, `/nodes/${node.proxmoxId}/${type}/${vmid}/status/resume`, "POST")
 }
 
+export async function getVmTasks(node: Node, vmid: number, limit = 25) {
+    return callProxmoxApi(node, "/cluster/tasks", "GET", {
+        vmid,
+        limit,
+        start: 0,
+    })
+}
+
 export async function setQemuConfig(node: Node, vmid: number, config: {
     cores?: number,
     memory?: number,

@@ -2,10 +2,17 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/db"
 import { redirect } from "next/navigation"
 import { DeployWizard } from "@/components/deploy-wizard"
+import { getFeatureFlags } from "@/lib/settings"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export default async function DeployPage() {
     const session = await auth()
     if (!session?.user?.id) return redirect("/login")
+
+    const flags = await getFeatureFlags()
+    const isEnabled = flags.deploy_enabled || session.user.role === "ADMIN"
 
     // Fetch necessary data for the wizard
     const groups = await prisma.templateGroup.findMany({
@@ -30,6 +37,25 @@ export default async function DeployPage() {
         where: { userId: session.user.id },
         orderBy: { createdAt: 'desc' }
     })
+
+    if (!isEnabled) {
+        return (
+            <div className="max-w-3xl mx-auto py-8 px-4">
+                <div className="mb-6">
+                    <h1 className="text-3xl font-bold tracking-tight mb-2">Deploy New Server</h1>
+                    <p className="text-muted-foreground">Deployment is temporarily disabled.</p>
+                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Deployments are offline</CardTitle>
+                        <CardDescription>
+                            Please contact support or check back later. Admins can toggle deployments in Settings.
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+        )
+    }
 
     return (
         <div className="max-w-4xl mx-auto py-8 px-4">
