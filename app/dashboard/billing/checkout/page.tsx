@@ -1,8 +1,9 @@
-import { finalizeCheckout } from "../actions"
+import { getCheckoutSession, finalizeCheckout } from "../actions"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { EmbeddedCheckout } from "@/components/billing/embedded-checkout"
+import { Badge } from "@/components/ui/badge"
 
 interface CheckoutPageProps {
   searchParams: { session_id?: string }
@@ -10,18 +11,33 @@ interface CheckoutPageProps {
 
 export default async function CheckoutStatusPage({ searchParams }: CheckoutPageProps) {
   const sessionId = typeof searchParams.session_id === "string" ? searchParams.session_id : undefined
+  if (!sessionId) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Checkout session missing</CardTitle>
+            <CardDescription>Please start from the store to create a checkout session.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/dashboard/store">
+              <Button>Back to Store</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
-  const result = sessionId ? await finalizeCheckout(sessionId) : { error: "Missing checkout session." }
+  const checkout = await getCheckoutSession(sessionId)
 
-  const isPaid = !result?.error && (result?.invoice?.status === "PAID" || result?.stripeStatus === "paid")
-
-  if (result?.error) {
+  if (checkout?.error || !checkout?.clientSecret) {
     return (
       <div className="p-6">
         <Card className="border-red-500/40 bg-red-500/5">
           <CardHeader>
             <CardTitle>Checkout issue</CardTitle>
-            <CardDescription>{result.error}</CardDescription>
+            <CardDescription>{checkout?.error || "Unable to load checkout session."}</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center gap-3">
             <Link href="/dashboard/store">
@@ -36,47 +52,45 @@ export default async function CheckoutStatusPage({ searchParams }: CheckoutPageP
     )
   }
 
-  return (
-    <div className="p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{isPaid ? "Payment received" : "Payment pending"}</CardTitle>
-          <CardDescription>
-            {isPaid
-              ? "Stripe confirmed your payment. Funds are now available on your account."
-              : "We are waiting for Stripe to confirm this checkout session."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {result.invoice && (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Invoice</span>
-                <span className="font-mono text-xs">{result.invoice.id}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Amount</span>
-                <span className="font-semibold">${result.invoice.amount.toFixed(2)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Status</span>
-                <Badge variant={isPaid ? "default" : "secondary"}>
-                  {isPaid ? "PAID" : "PENDING"}
-                </Badge>
-              </div>
-            </>
-          )}
+  const paymentComplete = checkout.paymentStatus === "paid" || checkout.status === "complete"
+  const invoiceResult = paymentComplete ? await finalizeCheckout(sessionId) : null
 
-          <div className="pt-2 flex gap-3">
-            <Link href="/dashboard">
-              <Button>Return to dashboard</Button>
-            </Link>
-            <Link href="/dashboard/billing">
-              <Button variant="outline">View invoices</Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+  return (
+    <div className="p-6 space-y-4">
+      {!paymentComplete && (
+        <EmbeddedCheckout clientSecret={checkout.clientSecret} sessionId={checkout.sessionId} />
+      )}
+
+      {paymentComplete && invoiceResult?.invoice && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment received</CardTitle>
+            <CardDescription>Funds have been applied to your account.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Invoice</span>
+              <span className="font-mono text-xs">{invoiceResult.invoice.id}</span>
+            </div>
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Amount</span>
+              <span className="font-semibold text-foreground">${invoiceResult.invoice.amount.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Status</span>
+              <Badge>PAID</Badge>
+            </div>
+            <div className="pt-3 flex gap-2">
+              <Link href="/dashboard">
+                <Button>Return to dashboard</Button>
+              </Link>
+              <Link href="/dashboard/billing">
+                <Button variant="outline">View invoices</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

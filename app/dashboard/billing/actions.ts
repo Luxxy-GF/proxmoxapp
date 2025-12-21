@@ -66,6 +66,7 @@ export async function createCheckoutSession(productId: string) {
           userId: session.user.id,
           productId: product.id,
         },
+        uiMode: "embedded",
       })
     } catch (err) {
       await prisma.invoice.delete({ where: { id: invoice.id } })
@@ -85,10 +86,36 @@ export async function createCheckoutSession(productId: string) {
       },
     })
 
-    return { sessionId: stripeSession.id, invoiceId: invoice.id }
+    return { sessionId: stripeSession.id, invoiceId: invoice.id, clientSecret: stripeSession.client_secret }
   } catch (error: any) {
     console.error("Failed to create checkout session", error)
     return { error: "Unable to start checkout. Please try again." }
+  }
+}
+
+export async function getCheckoutSession(sessionId: string) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" }
+  }
+
+  try {
+    const checkout = await retrieveStripeCheckoutSession(sessionId)
+
+    if (checkout.metadata?.userId && checkout.metadata.userId !== session.user.id) {
+      return { error: "This checkout session does not belong to your account." }
+    }
+
+    return {
+      sessionId: checkout.id,
+      clientSecret: checkout.client_secret,
+      status: checkout.status,
+      paymentStatus: checkout.payment_status,
+      invoiceId: checkout.metadata?.invoiceId,
+    }
+  } catch (error) {
+    console.error("Failed to fetch checkout session", error)
+    return { error: "Unable to load checkout session." }
   }
 }
 

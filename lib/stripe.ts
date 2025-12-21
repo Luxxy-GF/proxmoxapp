@@ -11,6 +11,7 @@ interface StripeRequestOptions {
 interface StripeCheckoutSession {
   id: string
   url?: string
+  client_secret?: string
   payment_status?: string
   status?: string
   amount_total?: number
@@ -62,6 +63,7 @@ export async function createStripeCheckoutSession(options: {
   cancelUrl: string
   customerEmail?: string | null
   metadata?: Record<string, string>
+  uiMode?: "embedded" | "hosted"
 }) {
   const {
     productName,
@@ -72,10 +74,12 @@ export async function createStripeCheckoutSession(options: {
     cancelUrl,
     customerEmail,
     metadata = {},
+    uiMode = "embedded",
   } = options
 
   const body = new URLSearchParams()
   body.append("mode", "payment")
+  body.append("ui_mode", uiMode)
   body.append("payment_method_types[0]", "card")
   body.append("success_url", successUrl)
   body.append("cancel_url", cancelUrl)

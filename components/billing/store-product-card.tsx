@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Check, Loader2, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import { createCheckoutSession } from "@/app/dashboard/billing/actions"
-import { loadStripe } from "@stripe/stripe-js"
+import { useRouter } from "next/navigation"
 
 interface StoreProductCardProps {
   product: {
@@ -31,15 +31,10 @@ interface StoreProductCardProps {
 
 export function StoreProductCard({ product }: StoreProductCardProps) {
   const [isLoading, startTransition] = useTransition()
+  const router = useRouter()
 
   const handleCheckout = () => {
     startTransition(async () => {
-      const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-      if (!publishableKey) {
-        toast.error("Stripe is not configured. Please contact support.")
-        return
-      }
-
       const res = await createCheckoutSession(product.id)
       if (res?.error) {
         toast.error(res.error)
@@ -47,15 +42,7 @@ export function StoreProductCard({ product }: StoreProductCardProps) {
       }
 
       if (res?.sessionId) {
-        const stripe = await loadStripe(publishableKey)
-        if (!stripe) {
-          toast.error("Unable to load Stripe.")
-          return
-        }
-        const result = await stripe.redirectToCheckout({ sessionId: res.sessionId })
-        if (result.error) {
-          toast.error(result.error.message || "Stripe redirect failed.")
-        }
+        router.push(`/dashboard/billing/checkout?session_id=${res.sessionId}`)
         return
       }
 
