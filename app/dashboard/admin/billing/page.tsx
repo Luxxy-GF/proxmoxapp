@@ -15,7 +15,6 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { InvoiceActions } from "@/components/admin/invoice-actions"
 
 export default async function BillingPage() {
@@ -42,20 +41,21 @@ export default async function BillingPage() {
                 </CardHeader>
                 <CardContent>
                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Invoice ID</TableHead>
-                                <TableHead>User</TableHead>
-                                <TableHead>Amount</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Due Date</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Invoice ID</TableHead>
+                                    <TableHead>User</TableHead>
+                                    <TableHead>Amount</TableHead>
+                                    <TableHead>Stripe</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Due Date</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                             {invoices.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center h-24">
+                                    <TableCell colSpan={7} className="text-center h-24">
                                         No invoices found.
                                     </TableCell>
                                 </TableRow>
@@ -64,10 +64,15 @@ export default async function BillingPage() {
                                     <TableRow key={inv.id}>
                                         <TableCell className="font-mono text-xs">{inv.id}</TableCell>
                                         <TableCell>
-                                            <div>{inv.user.name}</div>
+                                            <div>{inv.user.name || "Unnamed user"}</div>
                                             <div className="text-xs text-muted-foreground">{inv.user.email}</div>
                                         </TableCell>
                                         <TableCell>${inv.amount.toFixed(2)}</TableCell>
+                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                            {typeof inv.items === "object" && inv.items && (inv.items as any).stripeSessionId
+                                                ? (inv.items as any).stripeSessionId
+                                                : "—"}
+                                        </TableCell>
                                         <TableCell>
                                             <Badge variant={inv.status === 'PAID' ? 'default' : inv.status === 'CANCELLED' ? 'secondary' : 'destructive'}>
                                                 {inv.status}

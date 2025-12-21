@@ -14,6 +14,7 @@ import {
 
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db"
+import { redirect } from "next/navigation"
 
 export default async function DashboardLayout({
     children,
@@ -21,6 +22,10 @@ export default async function DashboardLayout({
     children: React.ReactNode
 }) {
     const session = await auth()
+    if (!session?.user?.id) {
+        redirect("/login")
+    }
+
     const servers = session?.user?.id ? await prisma.server.findMany({
         where: {
             OR: [
@@ -31,12 +36,12 @@ export default async function DashboardLayout({
         select: { id: true, name: true }
     }) : []
 
-    const user = session?.user ? {
+    const user = {
         name: session.user.name || "User",
         email: session.user.email || "",
         avatar: session.user.image || "/avatars/shadcn.jpg",
         role: session.user.role,
-    } : { name: "User", email: "", avatar: "", role: "USER" }
+    }
 
 
     return (

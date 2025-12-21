@@ -3,26 +3,18 @@
 
 import * as React from "react"
 import {
-  Activity,
   CreditCard,
-  Frame,
-  LifeBuoy,
-  Map,
-  PieChart,
   Send,
   Server,
   Settings2,
   ShoppingCart,
   SquareTerminal,
   Users,
-  Wallet,
   LayoutDashboard,
   Box,
   Package,
   Cpu,
   LayoutTemplate,
-  UserPlus,
-  Receipt,
   LineChart,
   ScrollText,
   Network,
@@ -54,19 +46,24 @@ const data = {
       icon: Server,
     },
     {
-      title: "Wallet",
-      url: "#",
-      icon: Wallet,
+      title: "Deploy",
+      url: "/dashboard/deploy",
+      icon: Send,
     },
     {
       title: "Store",
-      url: "#",
+      url: "/dashboard/store",
       icon: ShoppingCart,
     },
     {
-      title: "Support",
-      url: "#",
-      icon: LifeBuoy,
+      title: "Billing",
+      url: "/dashboard/billing",
+      icon: CreditCard,
+    },
+    {
+      title: "ISOs",
+      url: "/dashboard/isos",
+      icon: Disc,
     },
   ],
 
@@ -77,14 +74,19 @@ const data = {
       icon: LayoutDashboard,
     },
     {
-      title: "Configuration",
-      url: "/dashboard/admin/settings",
-      icon: Settings2,
-    },
-    {
       title: "Users",
       url: "/dashboard/admin/users",
       icon: Users,
+    },
+    {
+      title: "Servers",
+      url: "/dashboard/admin/servers",
+      icon: Server,
+    },
+    {
+      title: "Nodes",
+      url: "/dashboard/admin/nodes",
+      icon: Cpu,
     },
     {
       title: "Templates",
@@ -105,11 +107,6 @@ const data = {
       title: "Networking",
       url: "/dashboard/admin/networking",
       icon: Network,
-    },
-    {
-      title: "Proxmox Module",
-      url: "/dashboard/admin/proxmox",
-      icon: Cpu, // Using Cpu as proxy for Proxmox/Server
     },
   ],
 }

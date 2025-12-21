@@ -8,9 +8,9 @@ export default async function AdminLayout({
 }) {
     const session = await auth()
 
-    // if (!session?.user || session.user.role !== "ADMIN") {
-    //     redirect("/dashboard")
-    // }
+    if (!session?.user || session.user.role !== "ADMIN") {
+        redirect("/dashboard")
+    }
 
-    return <>{children}</>
+    return <div className="p-6 space-y-6">{children}</div>
 }
