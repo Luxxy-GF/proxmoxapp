@@ -38,10 +38,25 @@ export default async function BillingPage({ params }: { params: { id: string } }
         return <div className="p-6">Unauthorized</div>
     }
 
+    if (isSubuser && !server.subscription) {
+        return (
+            <div className="p-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Billing restricted</CardTitle>
+                        <CardDescription>
+                            Billing history is only visible when this server is linked to a subscription.
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+        )
+    }
+
     const invoices = await prisma.invoice.findMany({
         where: {
             userId: server.userId,
-            ...(server.subscription ? { subscriptionId: server.subscription.id } : {}),
+            ...(server.subscription ? { subscriptionId: server.subscription.id } : isSubuser ? { id: "" } : {}),
         },
         orderBy: { createdAt: "desc" },
     })

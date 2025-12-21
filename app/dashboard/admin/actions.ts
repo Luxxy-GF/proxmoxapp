@@ -3,7 +3,7 @@
 import { requireAdmin } from "@/lib/admin-auth"
 import { prisma } from "@/lib/db"
 import { encrypt } from "@/lib/encryption"
-import { FeatureKey, setFeatureFlag } from "@/lib/settings"
+import { FeatureKey, setFeatureFlag, setStripeSettings } from "@/lib/settings"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -452,6 +452,39 @@ export async function updateFeatureFlag(prevState: any, formData: FormData) {
     revalidatePath("/dashboard/admin/settings")
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/deploy")
+    revalidatePath("/dashboard/store")
+
+    return { success: true }
+}
+
+const stripeSettingsSchema = z.object({
+    publishableKey: z.string().min(1, "Publishable key is required"),
+    secretKey: z.string().min(1, "Secret key is required"),
+    webhookSecret: z.string().optional(),
+})
+
+export async function updateStripeSettings(prevState: any, formData: FormData) {
+    try { await requireAdmin() } catch { return { error: "Unauthorized" } }
+
+    const raw = {
+        publishableKey: formData.get("publishableKey"),
+        secretKey: formData.get("secretKey"),
+        webhookSecret: formData.get("webhookSecret"),
+    }
+
+    const validated = stripeSettingsSchema.safeParse(raw)
+    if (!validated.success) {
+        return { error: "Invalid Stripe settings", issues: validated.error.flatten().fieldErrors }
+    }
+
+    await setStripeSettings({
+        publishableKey: validated.data.publishableKey.trim(),
+        secretKey: validated.data.secretKey.trim(),
+        webhookSecret: validated.data.webhookSecret?.trim(),
+    })
+
+    revalidatePath("/dashboard/admin/settings")
+    revalidatePath("/dashboard/billing/checkout")
     revalidatePath("/dashboard/store")
 
     return { success: true }

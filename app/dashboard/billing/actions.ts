@@ -7,6 +7,7 @@ import {
   retrieveStripeCheckoutSession,
 } from "@/lib/stripe"
 import { headers } from "next/headers"
+import { getStripeSettings } from "@/lib/settings"
 
 function getOrigin() {
   const headerList = headers()
@@ -49,6 +50,10 @@ export async function createCheckoutSession(productId: string) {
     })
 
     const origin = getOrigin()
+    const stripeConfig = await getStripeSettings()
+    if (!stripeConfig.secretKey || !stripeConfig.publishableKey) {
+      return { error: "Stripe is not configured. Please add keys in Admin Settings." }
+    }
 
     let stripeSession
 
@@ -86,7 +91,12 @@ export async function createCheckoutSession(productId: string) {
       },
     })
 
-    return { sessionId: stripeSession.id, invoiceId: invoice.id, clientSecret: stripeSession.client_secret }
+    return {
+      sessionId: stripeSession.id,
+      invoiceId: invoice.id,
+      clientSecret: stripeSession.client_secret,
+      publishableKey: stripeConfig.publishableKey,
+    }
   } catch (error: any) {
     console.error("Failed to create checkout session", error)
     return { error: "Unable to start checkout. Please try again." }
@@ -101,6 +111,7 @@ export async function getCheckoutSession(sessionId: string) {
 
   try {
     const checkout = await retrieveStripeCheckoutSession(sessionId)
+    const stripeConfig = await getStripeSettings()
 
     if (checkout.metadata?.userId && checkout.metadata.userId !== session.user.id) {
       return { error: "This checkout session does not belong to your account." }
@@ -112,6 +123,7 @@ export async function getCheckoutSession(sessionId: string) {
       status: checkout.status,
       paymentStatus: checkout.payment_status,
       invoiceId: checkout.metadata?.invoiceId,
+      publishableKey: stripeConfig.publishableKey,
     }
   } catch (error) {
     console.error("Failed to fetch checkout session", error)

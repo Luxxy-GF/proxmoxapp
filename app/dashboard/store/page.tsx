@@ -4,13 +4,13 @@ import { redirect } from "next/navigation"
 import { StoreProductCard } from "@/components/billing/store-product-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { getFeatureFlags } from "@/lib/settings"
+import { getFeatureFlags, getStripeSettings } from "@/lib/settings"
 
 export default async function StorePage({ searchParams }: { searchParams?: { cancelled?: string } }) {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
-  const flags = await getFeatureFlags()
+  const [flags, stripe] = await Promise.all([getFeatureFlags(), getStripeSettings()])
   const isEnabled = flags.store_enabled || session.user.role === "ADMIN"
 
   const [products, user] = await Promise.all([
@@ -49,6 +49,17 @@ export default async function StorePage({ searchParams }: { searchParams?: { can
           <CardHeader>
             <CardTitle>Checkout cancelled</CardTitle>
             <CardDescription>You left Stripe without completing payment. Pick a plan to try again.</CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {!stripe.publishableKey && (
+        <Card className="border-amber-500/40 bg-amber-500/10">
+          <CardHeader>
+            <CardTitle>Stripe is not configured</CardTitle>
+            <CardDescription>
+              Add your publishable and secret keys in Admin &gt; Settings to enable checkout.
+            </CardDescription>
           </CardHeader>
         </Card>
       )}

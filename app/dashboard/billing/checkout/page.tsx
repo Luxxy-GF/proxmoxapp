@@ -58,7 +58,11 @@ export default async function CheckoutStatusPage({ searchParams }: CheckoutPageP
   return (
     <div className="p-6 space-y-4">
       {!paymentComplete && (
-        <EmbeddedCheckout clientSecret={checkout.clientSecret} sessionId={checkout.sessionId} />
+        <EmbeddedCheckout
+          clientSecret={checkout.clientSecret}
+          sessionId={checkout.sessionId}
+          publishableKey={checkout.publishableKey || ""}
+        />
       )}
 
       {paymentComplete && invoiceResult?.invoice && (

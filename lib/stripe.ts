@@ -1,3 +1,5 @@
+import { getStripeSettings } from "./settings"
+
 const STRIPE_API_BASE = "https://api.stripe.com/v1"
 
 type StripeMethod = "GET" | "POST"
@@ -20,10 +22,11 @@ interface StripeCheckoutSession {
   payment_intent?: string
 }
 
-function getStripeSecret() {
-  const secret = process.env.STRIPE_SECRET_KEY
+async function getStripeSecret() {
+  const settings = await getStripeSettings()
+  const secret = settings.secretKey || process.env.STRIPE_SECRET_KEY
   if (!secret) {
-    throw new Error("STRIPE_SECRET_KEY is not configured in the environment")
+    throw new Error("Stripe secret key is not configured. Set it in Admin Settings.")
   }
   return secret
 }
@@ -33,7 +36,7 @@ async function stripeRequest<T>({
   method = "GET",
   body,
 }: StripeRequestOptions): Promise<T> {
-  const secret = getStripeSecret()
+  const secret = await getStripeSecret()
 
   const response = await fetch(`${STRIPE_API_BASE}${path}`, {
     method,

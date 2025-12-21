@@ -7,19 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
-const getStripePromise = () => {
-  const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-  if (!pk) return null
-  return loadStripe(pk)
-}
-
 interface EmbeddedCheckoutProps {
   clientSecret: string
   sessionId: string
+  publishableKey: string
 }
 
-export function EmbeddedCheckout({ clientSecret, sessionId }: EmbeddedCheckoutProps) {
-  const stripePromise = useMemo(() => getStripePromise(), [])
+export function EmbeddedCheckout({ clientSecret, sessionId, publishableKey }: EmbeddedCheckoutProps) {
+  const stripePromise = useMemo(() => (publishableKey ? loadStripe(publishableKey) : null), [publishableKey])
 
   if (!stripePromise) {
     return (
