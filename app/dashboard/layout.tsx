@@ -14,6 +14,7 @@ import {
 
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db"
+import { getFeatureFlags } from "@/lib/settings"
 import { redirect } from "next/navigation"
 
 export default async function DashboardLayout({
@@ -25,6 +26,8 @@ export default async function DashboardLayout({
     if (!session?.user?.id) {
         redirect("/login")
     }
+
+    const flags = await getFeatureFlags()
 
     const servers = session?.user?.id ? await prisma.server.findMany({
         where: {
@@ -46,7 +49,7 @@ export default async function DashboardLayout({
 
     return (
         <SidebarProvider>
-            <AppSidebar servers={servers} user={user} />
+            <AppSidebar servers={servers} user={user} featureFlags={flags} />
             <SidebarInset>
                 {children}
             </SidebarInset>

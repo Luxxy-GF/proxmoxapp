@@ -3,6 +3,7 @@
 import { requireAdmin } from "@/lib/admin-auth"
 import { prisma } from "@/lib/db"
 import { encrypt } from "@/lib/encryption"
+import { FeatureKey, setFeatureFlag } from "@/lib/settings"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -426,4 +427,32 @@ export async function refreshNode(id: string) {
     } catch (error) {
         return { error: "Failed to refresh node" }
     }
+}
+
+const featureFlagSchema = z.object({
+    key: z.enum(["store_enabled", "deploy_enabled"]) as z.ZodType<FeatureKey>,
+    enabled: z.coerce.boolean(),
+})
+
+export async function updateFeatureFlag(prevState: any, formData: FormData) {
+    try { await requireAdmin() } catch { return { error: "Unauthorized" } }
+
+    const validated = featureFlagSchema.safeParse({
+        key: formData.get("key"),
+        enabled: formData.get("enabled"),
+    })
+
+    if (!validated.success) {
+        return { error: "Invalid flag payload" }
+    }
+
+    const { key, enabled } = validated.data
+
+    await setFeatureFlag(key, enabled)
+    revalidatePath("/dashboard/admin/settings")
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/deploy")
+    revalidatePath("/dashboard/store")
+
+    return { success: true }
 }

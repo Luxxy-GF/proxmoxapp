@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { InvoiceActions } from "@/components/admin/invoice-actions"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default async function BillingPage() {
     const invoices = await prisma.invoice.findMany({
@@ -30,6 +32,11 @@ export default async function BillingPage() {
                 <p className="text-muted-foreground">
                     Manage system-wide invoices and payments.
                 </p>
+            </div>
+            <div>
+                <Link href="/dashboard/admin/settings">
+                    <Button variant="outline" size="sm">Feature Toggles</Button>
+                </Link>
             </div>
 
             <Card>

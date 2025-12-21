@@ -74,6 +74,11 @@ const data = {
       icon: LayoutDashboard,
     },
     {
+      title: "Settings",
+      url: "/dashboard/admin/settings",
+      icon: Settings2,
+    },
+    {
       title: "Users",
       url: "/dashboard/admin/users",
       icon: Users,
@@ -111,13 +116,24 @@ const data = {
   ],
 }
 
-export function AppSidebar({ servers = [], user, ...props }: React.ComponentProps<typeof Sidebar> & { servers?: any[], user?: any }) {
+export function AppSidebar({
+  servers = [],
+  user,
+  featureFlags,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { servers?: any[], user?: any, featureFlags?: Record<string, boolean> }) {
 
   // Dynamic navigation data
+  const storeEnabled = featureFlags?.store_enabled !== false
+  const deployEnabled = featureFlags?.deploy_enabled !== false
+
   const navData = {
     user: user || data.user,
-    // ... data.dashboard etc
-    dashboard: data.dashboard,
+    dashboard: data.dashboard.filter((item) => {
+      if (item.url === "/dashboard/store" && !storeEnabled) return false
+      if (item.url === "/dashboard/deploy" && !deployEnabled) return false
+      return true
+    }),
     servers: [
       {
         title: "Your Servers",

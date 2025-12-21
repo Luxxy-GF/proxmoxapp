@@ -85,11 +85,7 @@ export async function createCheckoutSession(productId: string) {
       },
     })
 
-    if (!stripeSession.url) {
-      return { error: "Stripe session was created without a redirect URL." }
-    }
-
-    return { url: stripeSession.url, invoiceId: invoice.id }
+    return { sessionId: stripeSession.id, invoiceId: invoice.id }
   } catch (error: any) {
     console.error("Failed to create checkout session", error)
     return { error: "Unable to start checkout. Please try again." }

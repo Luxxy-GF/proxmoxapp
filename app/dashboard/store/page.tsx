@@ -4,10 +4,14 @@ import { redirect } from "next/navigation"
 import { StoreProductCard } from "@/components/billing/store-product-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { getFeatureFlags } from "@/lib/settings"
 
 export default async function StorePage({ searchParams }: { searchParams?: { cancelled?: string } }) {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
+
+  const flags = await getFeatureFlags()
+  const isEnabled = flags.store_enabled || session.user.role === "ADMIN"
 
   const [products, user] = await Promise.all([
     prisma.product.findMany({
@@ -29,6 +33,17 @@ export default async function StorePage({ searchParams }: { searchParams?: { can
         </p>
       </div>
 
+      {!isEnabled && (
+        <Card className="border-amber-500/40 bg-amber-500/10">
+          <CardHeader>
+            <CardTitle>Store is currently disabled</CardTitle>
+            <CardDescription>
+              Please check back later. If you are an admin, toggle the store in Settings.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
       {searchParams?.cancelled && (
         <Card className="border-amber-500/50 bg-amber-500/10">
           <CardHeader>
@@ -38,22 +53,24 @@ export default async function StorePage({ searchParams }: { searchParams?: { can
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3 md:grid-cols-2">
-        {products.length === 0 ? (
-          <Card className="border-dashed border-muted-foreground/30 bg-muted/20">
-            <CardHeader>
-              <CardTitle>No plans available</CardTitle>
-              <CardDescription>
-                Add products from the admin area to start selling plans.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        ) : (
-          products.map((product) => (
-            <StoreProductCard key={product.id} product={product} />
-          ))
-        )}
-      </div>
+      {isEnabled && (
+        <div className="grid gap-6 lg:grid-cols-3 md:grid-cols-2">
+          {products.length === 0 ? (
+            <Card className="border-dashed border-muted-foreground/30 bg-muted/20">
+              <CardHeader>
+                <CardTitle>No plans available</CardTitle>
+                <CardDescription>
+                  Add products from the admin area to start selling plans.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ) : (
+            products.map((product) => (
+              <StoreProductCard key={product.id} product={product} />
+            ))
+          )}
+        </div>
+      )}
 
       <Card className="border-zinc-800 bg-zinc-950/50">
         <CardHeader>
