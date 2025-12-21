@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, startTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Check, ChevronsRight, Server, User, Box, HardDrive, Cpu, Terminal, Network } from "lucide-react"
+import { Check, ChevronsRight, Server, User, Box, HardDrive, Cpu, Terminal, Network, Disc } from "lucide-react"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 // Import the server action directly. In Next.js App Router, this works in Client Components.
 import { createServerAdmin, getNodeStorage } from "@/app/dashboard/admin/servers/new/actions"
@@ -18,9 +19,10 @@ interface WizardProps {
     products: any[]
     groups: any[]
     ipPools: any[]
+    isos: any[]
 }
 
-export function ServerCreationWizard({ users, nodes, products, groups, ipPools }: WizardProps) {
+export function ServerCreationWizard({ users, nodes, products, groups, ipPools, isos }: WizardProps) {
     const [step, setStep] = useState(1)
 
     // Form State
@@ -28,6 +30,9 @@ export function ServerCreationWizard({ users, nodes, products, groups, ipPools }
     const [selectedNode, setSelectedNode] = useState<string>("")
     const [selectedProduct, setSelectedProduct] = useState<string>("")
     const [selectedTemplate, setSelectedTemplate] = useState<string>("")
+    const [selectedIso, setSelectedIso] = useState<string>("") // ISO state
+    const [osType, setOsType] = useState<"template" | "iso">("template") // Tab state
+
     const [selectedStorage, setSelectedStorage] = useState<string>("") // Storage state
     const [selectedPool, setSelectedPool] = useState<string>("") // IP Pool state
     const [availableStorage, setAvailableStorage] = useState<any[]>([]) // Storage list
@@ -43,6 +48,16 @@ export function ServerCreationWizard({ users, nodes, products, groups, ipPools }
 
     // Filter pools by selected node
     const availablePools = ipPools.filter(p => p.nodeId === selectedNode)
+
+    // Filter ISOs: Show Admin ISOs + Selected User ISOs
+    // Assume Admin ISOs are owned by admin (role check via user object? or just userId?)
+    // For now, simple filter: iso.userId === selectedUser OR (maybe check if ISO owner is admin explicitly if available)
+    // Actually, admins should see ALL. But highlighting user's ISOs makes sense.
+    // Let's just show all for simplicity, or filter by user?
+    // "Custom ISO" implies user's iso. Let's filter by selectedUser.
+    const userIsos = isos.filter(i => i.userId === selectedUser || i.userId === 'admin' /* fallback */)
+    // If we want to allow picking ANY ISO, we can keep all `isos`.
+    // Let's us `userIsos` for now as primary list.
 
     const nextStep = () => setStep(s => s + 1)
     const prevStep = () => setStep(s => s - 1)
@@ -63,7 +78,8 @@ export function ServerCreationWizard({ users, nodes, products, groups, ipPools }
                 userId: selectedUser,
                 nodeId: selectedNode,
                 productId: selectedProduct || undefined,
-                templateId: selectedTemplate,
+                templateId: osType === 'iso' ? undefined : selectedTemplate,
+                isoId: osType === 'iso' ? selectedIso : undefined,
                 poolId: selectedPool, // Pass pool ID
                 hostname: config.hostname,
                 password: config.password,
@@ -331,7 +347,7 @@ export function ServerCreationWizard({ users, nodes, products, groups, ipPools }
                 </Card>
             )}
 
-            {/* Step 3: OS Template */}
+            {/* Step 3: OS Selection */}
             {step === 3 && (
                 <Card className="border-zinc-800 bg-zinc-950/50">
                     <CardHeader>
@@ -339,44 +355,87 @@ export function ServerCreationWizard({ users, nodes, products, groups, ipPools }
                         <CardDescription>Choose the OS image for the server.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-8">
-                            {groups.map(group => (
-                                <div key={group.id} className="space-y-3">
-                                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider pl-1 border-l-2 border-primary/50">{group.name}</h3>
+                        <Tabs value={osType} onValueChange={(v) => startTransition(() => setOsType(v as "template" | "iso"))}>
+                            <TabsList className="mb-6 w-full justify-start">
+                                <TabsTrigger value="template">OS Templates</TabsTrigger>
+                                <TabsTrigger value="iso">Custom ISO</TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="template" className="space-y-8 mt-0">
+                                {groups.map(group => (
+                                    <div key={group.id} className="space-y-3">
+                                        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider pl-1 border-l-2 border-primary/50">{group.name}</h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {group.templates.map((t: any) => (
+                                                <div
+                                                    key={t.id}
+                                                    className={cn(
+                                                        "cursor-pointer rounded-xl border-2 p-4 hover:bg-zinc-900 transition-all text-center flex flex-col items-center gap-3 relative",
+                                                        selectedTemplate === t.id ? "border-primary bg-primary/5" : "border-zinc-800 bg-zinc-950"
+                                                    )}
+                                                    onClick={() => setSelectedTemplate(t.id)}
+                                                >
+                                                    {t.image ? (
+                                                        <img src={t.image} alt={t.name} className="w-10 h-10 object-contain" />
+                                                    ) : (
+                                                        <Terminal className="w-10 h-10 text-muted-foreground" />
+                                                    )}
+                                                    <div className="flex flex-col">
+                                                        <span className="font-semibold text-sm">{t.name}</span>
+                                                        <span className="text-xs text-muted-foreground">ID: {t.vmid}</span>
+                                                    </div>
+                                                    {selectedTemplate === t.id && (
+                                                        <div className="absolute top-2 right-2 bg-primary rounded-full p-0.5 text-primary-foreground">
+                                                            <Check className="w-3 h-3" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </TabsContent>
+
+                            <TabsContent value="iso" className="mt-0">
+                                {isos.length === 0 ? (
+                                    <div className="text-center py-12 border-2 border-dashed border-zinc-800 rounded-xl">
+                                        <Disc className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+                                        <p className="text-muted-foreground">No ISOs found.</p>
+                                    </div>
+                                ) : (
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {group.templates.map((t: any) => (
+                                        {isos.map((iso: any) => (
                                             <div
-                                                key={t.id}
+                                                key={iso.id}
                                                 className={cn(
                                                     "cursor-pointer rounded-xl border-2 p-4 hover:bg-zinc-900 transition-all text-center flex flex-col items-center gap-3 relative",
-                                                    selectedTemplate === t.id ? "border-primary bg-primary/5" : "border-zinc-800 bg-zinc-950"
+                                                    selectedIso === iso.id ? "border-primary bg-primary/5" : "border-zinc-800 bg-zinc-950"
                                                 )}
-                                                onClick={() => setSelectedTemplate(t.id)}
+                                                onClick={() => setSelectedIso(iso.id)}
                                             >
-                                                {t.image ? (
-                                                    <img src={t.image} alt={t.name} className="w-10 h-10 object-contain" />
-                                                ) : (
-                                                    <Terminal className="w-10 h-10 text-muted-foreground" />
-                                                )}
-                                                <div className="flex flex-col">
-                                                    <span className="font-semibold text-sm">{t.name}</span>
-                                                    <span className="text-xs text-muted-foreground">ID: {t.vmid}</span>
+                                                <Disc className="w-10 h-10 text-zinc-400" />
+                                                <div className="flex flex-col overflow-hidden w-full">
+                                                    <span className="font-semibold text-sm truncate" title={iso.name}>{iso.name}</span>
+                                                    <span className="text-xs text-muted-foreground">{(Number(iso.size) / (1024 * 1024 * 1024)).toFixed(1)} GB</span>
                                                 </div>
-                                                {selectedTemplate === t.id && (
+                                                {selectedIso === iso.id && (
                                                     <div className="absolute top-2 right-2 bg-primary rounded-full p-0.5 text-primary-foreground">
                                                         <Check className="w-3 h-3" />
                                                     </div>
                                                 )}
+                                                {iso.userId === 'admin' && (
+                                                    <span className="absolute top-2 left-2 text-[10px] bg-zinc-800 px-1 rounded text-zinc-400 border border-zinc-700">ADMIN</span>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                )}
+                            </TabsContent>
+                        </Tabs>
                     </CardContent>
                     <CardFooter className="justify-between">
                         <Button variant="ghost" onClick={prevStep}>Back</Button>
-                        <Button onClick={nextStep} disabled={!selectedTemplate}>
+                        <Button onClick={nextStep} disabled={osType === 'template' ? !selectedTemplate : !selectedIso}>
                             Next Step <ChevronsRight className="ml-2 w-4 h-4" />
                         </Button>
                     </CardFooter>
@@ -517,9 +576,13 @@ export function ServerCreationWizard({ users, nodes, products, groups, ipPools }
                                         <span className="font-medium">{resources.cores} vCPU / {resources.memory} MB RAM / {resources.disk} GB Disk</span>
                                     </div>
                                     <div className="flex justify-between py-1 border-b border-zinc-800">
-                                        <span className="text-zinc-400">OS Template</span>
+                                        <span className="text-zinc-400">OS Image</span>
                                         <span className="font-medium">
-                                            {groups.flatMap(g => g.templates).find((t: any) => t.id === selectedTemplate)?.name}
+                                            {osType === 'template' ? (
+                                                groups.flatMap(g => g.templates).find((t: any) => t.id === selectedTemplate)?.name
+                                            ) : (
+                                                isos.find((i: any) => i.id === selectedIso)?.name + " (ISO)"
+                                            )}
                                         </span>
                                     </div>
                                     <div className="flex justify-between py-1 border-b border-zinc-800">

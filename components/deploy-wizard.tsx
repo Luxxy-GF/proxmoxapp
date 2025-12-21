@@ -1,39 +1,69 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Check, Loader2, Terminal, Server } from "lucide-react"
-import { deployServer } from "@/app/dashboard/deploy/actions"
+import { getDefaultNodeStorage, deployServer } from "@/app/dashboard/deploy/actions"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+import { Disc } from "lucide-react"
 
 interface WizardProps {
     groups: any[]
     products: any[]
     ipPools: any[]
+    isos: any[]
 }
 
-export function DeployWizard({ groups, products, ipPools }: WizardProps) {
+export function DeployWizard({ groups, products, ipPools, isos }: WizardProps) {
     const [step, setStep] = useState(1)
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
+    const [selectedIso, setSelectedIso] = useState<string | null>(null) // New state
+    const [osType, setOsType] = useState<"template" | "iso">("template") // Tab state
+
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
     const [selectedPool, setSelectedPool] = useState<string | null>(null)
+    const [selectedStorage, setSelectedStorage] = useState<string>("") // Storage State
+    const [storageOptions, setStorageOptions] = useState<any[]>([]) // Storage List
+
     const [config, setConfig] = useState({ hostname: "", password: "" })
     const [isDeploying, setIsDeploying] = useState(false)
     const [error, setError] = useState("")
     const router = useRouter()
 
+    // Fetch storage options when component mounts or tab changes to ISO
+    useEffect(() => {
+        if (osType === 'iso') {
+            getDefaultNodeStorage().then(list => {
+                setStorageOptions(list)
+                // Default to local-lvm/zfs/ceph if available
+                const preferred = list.find((s: any) => s.storage === 'local-lvm' || s.storage === 'local-zfs' || s.storage === 'ceph')
+                if (preferred) setSelectedStorage(preferred.storage)
+                else if (list.length > 0) setSelectedStorage(list[0].storage)
+            })
+        }
+    }, [osType])
+
     const handleDeploy = async () => {
-        if (!selectedTemplate || !selectedProduct || !config.hostname) return
+        if ((!selectedTemplate && !selectedIso) || !selectedProduct || !config.hostname) return
 
         setIsDeploying(true)
         setError("")
 
-        const result = await deployServer(selectedTemplate, selectedProduct, config.hostname, config.password, selectedPool)
+        // If template mode, isoId is null. If iso mode, templateId is null.
+        const tId = osType === 'template' ? selectedTemplate : null
+        const iId = osType === 'iso' ? selectedIso : null
+
+        // Pass selectedStorage only if using ISO mode
+        const storageVal = osType === 'iso' ? selectedStorage : undefined
+
+        const result = await deployServer(tId, selectedProduct, config.hostname, config.password, selectedPool, iId, storageVal)
 
         if (result.error) {
             setError(result.error)
@@ -52,39 +82,112 @@ export function DeployWizard({ groups, products, ipPools }: WizardProps) {
                         <CardTitle>Select Operating System</CardTitle>
                         <CardDescription>Choose the OS image for your server.</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {groups.map(group => (
-                            <div key={group.id} className="col-span-full">
-                                <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">{group.name}</h3>
+                    <CardContent>
+                        <Tabs value={osType} onValueChange={(v) => {
+                            setOsType(v as "template" | "iso")
+                            // Reset selections when switching tabs? Optional.
+                        }}>
+                            <TabsList className="mb-6">
+                                <TabsTrigger value="template">OS Templates</TabsTrigger>
+                                <TabsTrigger value="iso">Custom ISO</TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="template">
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {group.templates.map((t: any) => (
-                                        <div
-                                            key={t.id}
-                                            className={cn(
-                                                "cursor-pointer rounded-xl border-2 p-4 hover:bg-zinc-900 transition-all text-center flex flex-col items-center gap-3 relative",
-                                                selectedTemplate === t.id ? "border-primary bg-primary/5" : "border-zinc-800 bg-zinc-950"
-                                            )}
-                                            onClick={() => setSelectedTemplate(t.id)}
-                                        >
-                                            {t.image ? (
-                                                <img src={t.image} alt={t.name} className="w-12 h-12 object-contain" />
-                                            ) : (
-                                                <Terminal className="w-12 h-12 text-muted-foreground" />
-                                            )}
-                                            <span className="font-semibold">{t.name}</span>
-                                            {selectedTemplate === t.id && (
-                                                <div className="absolute top-2 right-2 bg-primary rounded-full p-0.5 text-primary-foreground">
-                                                    <Check className="w-3 h-3" />
-                                                </div>
-                                            )}
+                                    {groups.map(group => (
+                                        <div key={group.id} className="col-span-full">
+                                            <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">{group.name}</h3>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                                {group.templates.map((t: any) => (
+                                                    <div
+                                                        key={t.id}
+                                                        className={cn(
+                                                            "cursor-pointer rounded-xl border-2 p-4 hover:bg-zinc-900 transition-all text-center flex flex-col items-center gap-3 relative",
+                                                            selectedTemplate === t.id ? "border-primary bg-primary/5" : "border-zinc-800 bg-zinc-950"
+                                                        )}
+                                                        onClick={() => setSelectedTemplate(t.id)}
+                                                    >
+                                                        {t.image ? (
+                                                            <img src={t.image} alt={t.name} className="w-12 h-12 object-contain" />
+                                                        ) : (
+                                                            <Terminal className="w-12 h-12 text-muted-foreground" />
+                                                        )}
+                                                        <span className="font-semibold">{t.name}</span>
+                                                        {selectedTemplate === t.id && (
+                                                            <div className="absolute top-2 right-2 bg-primary rounded-full p-0.5 text-primary-foreground">
+                                                                <Check className="w-3 h-3" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-                        ))}
+                            </TabsContent>
+
+                            <TabsContent value="iso">
+                                {isos.length === 0 ? (
+                                    <div className="text-center py-12 border-2 border-dashed border-zinc-800 rounded-xl bg-zinc-950">
+                                        <Disc className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                        <h3 className="text-lg font-medium">No ISOs Found</h3>
+                                        <p className="text-muted-foreground mb-4">Upload an ISO image to deploy a custom server.</p>
+                                        <Button variant="outline" onClick={() => router.push("/dashboard/isos")}>
+                                            Manage ISOs
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {isos.map(iso => (
+                                            <div
+                                                key={iso.id}
+                                                onClick={() => setSelectedIso(iso.id)}
+                                                className={cn(
+                                                    "cursor-pointer rounded-xl border-2 p-4 transition-all flex items-start gap-4",
+                                                    selectedIso === iso.id ? "border-primary bg-primary/5" : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"
+                                                )}
+                                            >
+                                                <div className="p-2 rounded-full bg-zinc-900">
+                                                    <Disc className="h-6 w-6 text-zinc-400" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-medium truncate pr-2" title={iso.name}>{iso.name}</h3>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {(Number(iso.size) / (1024 * 1024 * 1024)).toFixed(2)} GB • {iso.status}
+                                                    </p>
+                                                </div>
+                                                {selectedIso === iso.id && (
+                                                    <div className="ml-auto bg-primary rounded-full p-0.5 text-primary-foreground">
+                                                        <Check className="w-3 h-3" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="mt-8 space-y-4 max-w-sm">
+                                    <Label>Target Storage</Label>
+                                    <Select value={selectedStorage} onValueChange={setSelectedStorage} disabled={storageOptions.length === 0}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select storage for VM disk" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {storageOptions.map((s: any) => (
+                                                <SelectItem key={s.storage} value={s.storage}>
+                                                    {s.storage} ({Math.round(s.avail / 1024 / 1024 / 1024)}GB Free)
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-xs text-muted-foreground">Select where the VM's main disk will be created.</p>
+                                </div>
+
+                            </TabsContent>
+                        </Tabs>
                     </CardContent>
                     <CardFooter className="justify-end">
-                        <Button onClick={() => setStep(2)} disabled={!selectedTemplate}>
+                        <Button onClick={() => setStep(2)} disabled={osType === 'template' ? !selectedTemplate : !selectedIso}>
                             Next: Select Plan
                         </Button>
                     </CardFooter>

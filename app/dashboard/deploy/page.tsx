@@ -5,7 +5,7 @@ import { DeployWizard } from "@/components/deploy-wizard"
 
 export default async function DeployPage() {
     const session = await auth()
-    // if (!session?.user) return redirect("/login")
+    if (!session?.user?.id) return redirect("/login")
 
     // Fetch necessary data for the wizard
     const groups = await prisma.templateGroup.findMany({
@@ -26,6 +26,11 @@ export default async function DeployPage() {
         orderBy: { name: 'asc' }
     })
 
+    const isos = await prisma.iso.findMany({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: 'desc' }
+    })
+
     return (
         <div className="max-w-4xl mx-auto py-8 px-4">
             <div className="mb-8">
@@ -37,6 +42,7 @@ export default async function DeployPage() {
                 groups={groups}
                 products={products}
                 ipPools={ipPools}
+                isos={isos}
             />
         </div>
     )

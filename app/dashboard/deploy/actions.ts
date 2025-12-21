@@ -3,14 +3,37 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { getNextVmid, cloneLxc, setLxcConfig } from "@/lib/proxmox"
+import { getNextVmid, cloneLxc, setLxcConfig, createQemuVm, configQemuDisk, startVm, createVncProxy, getStorage } from "@/lib/proxmox"
+
+export async function getDefaultNodeStorage() {
+    const session = await auth()
+    if (!session?.user?.id) throw new Error("Unauthorized")
+
+    const onlineNode = await prisma.node.findFirst({
+        where: { status: 'Online' }
+    })
+
+    if (!onlineNode) return []
+
+    try {
+        const storageList = await getStorage(onlineNode)
+        // Return only storage capable of modifying/storing images (disk images)
+        // Usually 'images' content.
+        return storageList.filter((s: any) => s.content.includes('images'))
+    } catch (e) {
+        console.error(e)
+        return []
+    }
+}
 
 export async function deployServer(
-    templateId: string,
+    templateId: string | null,
     productId: string,
     hostname: string,
     password?: string,
-    poolId?: string | null
+    poolId?: string | null,
+    isoId?: string | null,
+    storage?: string // Optional storage selection
 ) {
     const session = await auth()
     if (!session?.user?.id) return { error: "Unauthorized" }
@@ -18,13 +41,13 @@ export async function deployServer(
     // 1. Validate inputs
     if (!hostname || hostname.length < 3) return { error: "Hostname must be at least 3 characters" }
 
+    // Either template OR iso must be selected
+    if (!templateId && !isoId) return { error: "Must select an OS Template or Custom ISO" }
+
     try {
         // 2. Fetch Resources
         const product = await prisma.product.findUnique({ where: { id: productId } })
         if (!product) return { error: "Product not found" }
-
-        const template = await prisma.template.findUnique({ where: { id: templateId } })
-        if (!template) return { error: "Template not found" }
 
         // 3. Find available node
         // Simple strategy: Pick the first online node
@@ -34,74 +57,152 @@ export async function deployServer(
 
         if (!onlineNode) return { error: "No available infrastructure nodes found" }
 
-        // 4. Create Server Record (PROVISIONING)
-        // We need a temporary or reserved VMID? Or we fetch it live.
-        // It's safer to fetch live nextID from Proxmox.
+        // 3a. Resolve Storage
+        // If storage provided, use it. Else auto-detect.
+        let targetStorage = storage
 
+        if (!targetStorage) {
+            const storageList = await getStorage(onlineNode)
+            const allImageStorage = storageList.filter((s: any) => s.content.includes('images'))
+            if (allImageStorage.length === 0) return { error: "No storage available for VM disks on node" }
+
+            // Prioritize known high-performance/standard names
+            const preferredStorage = allImageStorage.find((s: any) => s.storage === 'local-lvm' || s.storage === 'local-zfs' || s.storage === 'ceph')
+            targetStorage = preferredStorage ? preferredStorage.storage : allImageStorage[0].storage
+        }
+
+        // 4. Create Server Record (PROVISIONING)
         let newVmid: number
         try {
             newVmid = await getNextVmid(onlineNode)
+
+            // Check for collision in DB
+            let attempts = 0
+            let isUnique = false
+            while (!isUnique && attempts < 10) {
+                const collision = await prisma.server.findFirst({
+                    where: {
+                        vmid: newVmid,
+                        nodeId: onlineNode.id
+                    }
+                })
+
+                if (!collision) {
+                    isUnique = true
+                } else {
+                    console.log(`VMID collision for ${newVmid}, retrying...`)
+                    // Try next ID manually first
+                    newVmid++
+                    // Or fetch fresh from cluster if preferred, but incrementing is safer against cluster lag
+                    // Validate with cluster? 
+                    // Ideally we check next free ID from cluster again, passing the collision ID as hint if API supports it,
+                    // or just trust our increment. Proxmox `nextid` API doesn't take "min" param easily.
+                    // The Admin wizard re-checks `getNextVmid(node, newVmid)`
+                    try {
+                        const next = await getNextVmid(onlineNode, newVmid)
+                        newVmid = next
+                    } catch {
+                        // Fallback to simple increment if API check fails
+                    }
+                    attempts++
+                }
+            }
+
+            if (!isUnique) throw new Error("Failed to find unique VMID after retries")
+
         } catch (e) {
+            console.error(e)
             return { error: "Failed to allocate IP/ID from cluster" }
+        }
+
+        // Define Type
+        // If ISO, it's QEMU. If template, check template type.
+        let type = 'lxc'
+        let template: any = null
+
+        if (isoId) {
+            type = 'qemu'
+        } else if (templateId) {
+            template = await prisma.template.findUnique({ where: { id: templateId } })
+            if (!template) return { error: "Template not found" }
+            type = template.type || 'lxc' // Default to LXC if not specified, or checks product?
+            // Product type is often fallback.
+            if (template.type === 'qemu') type = 'qemu'
         }
 
         const server = await prisma.server.create({
             data: {
-                name: hostname, // Adding name to Server model might be needed? 
-                // Schema check: Server has no 'name', it has 'hostname' in ServerNetwork?
-                // Ah, Schema "Server" has no name. Let's check schema.
-                // It seems we might have missed 'name' or 'hostname' in Server model.
-                // Let's check ServerNetwork for hostname?
-                // User plan said "Configure: Hostname".
-
-                // Looking at schema `Server`: status, billingStatus, vmid, type...
-                // Looking at schema `ServerNetwork`: ipAddress, macAddress...
-
-                // We should probably add a `name` or `hostname` field to `Server` for easy ID.
-                // For now, I'll add it to schema or put it in a related table if strictly normalized.
-                // I'll assume we wanted it on Server.
-
-                // Wait, `Model Server`:
-                // id, status, billingStatus, vmid, type, userId, nodeId, productId...
-
-                // I will Add `name` to Server model in this step as well via schema update?
-                // Or use `ServerNetwork`? Typically `Server` should have a friendly label.
-
-                // Let's assume for this action I will update schema quickly or use what we have.
-                // I'll add `name` to Server model. It's too important to miss.
+                name: hostname,
                 userId: session.user.id,
                 nodeId: onlineNode.id,
                 productId: product.id,
                 vmid: newVmid,
-                type: product.type || 'lxc', // 'lxc' or 'qemu'
+                type: type,
                 status: 'PROVISIONING',
+                templateId: templateId || undefined, // Optional
+                isoId: isoId || undefined // Optional
             }
         })
 
-        // 5. Trigger Provisioning (Background-ish, but for now await it)
-        // In production, use a queue (BullMQ). Here we await or fire-and-forget.
-        // Awaiting is safer for the demo response.
-
+        // 5. Trigger Provisioning
         try {
-            // Clone
-            await cloneLxc(onlineNode, template.vmid, newVmid, hostname, `Owner: ${session.user.email}`)
+            if (isoId) {
+                // === Custom ISO Flow ===
+                const iso = await prisma.iso.findUnique({ where: { id: isoId } })
+                if (!iso) throw new Error("ISO not found")
 
-            // Config Resources
-            await setLxcConfig(onlineNode, newVmid, {
-                cores: product.cpuCores,
-                memory: product.memoryMB,
-                swap: 512, // Default swap
-                password: password // Root password
-            })
+                // 1. Create Empty VM
+                // Disk Size: Product diskGB
+                // We create a scsi0 disk on 'local-lvm' (default) or 'local-zfs' etc.
+                // We need to know storage. "local-lvm" is standard for PVE.
+                // For robustness, we should find storage, but hardcoding 'local-lvm' or 'local' is common in simple scripts.
+                // Better: find a storage that supports 'images' (VM disks).
+                // We'll stick to 'local-lvm' for now or 'local'.
 
-            // Start it?
-            // await startVm(onlineNode, newVmid, 'lxc')
+                // Use resolved targetStorage
 
-            // Update Status
-            await prisma.server.update({
-                where: { id: server.id },
-                data: { status: 'RUNNING' }
-            })
+                await createQemuVm(onlineNode, newVmid, hostname, {
+                    cores: product.cpuCores,
+                    memory: product.memoryMB,
+                    scsi0: `${targetStorage}:${product.diskGB}`, // Use resolved storage
+                    ide2: `${iso.storage}:iso/${iso.filename},media=cdrom`, // Attach ISO
+                    boot: "order=ide2;scsi0" // Boot from CD first
+                })
+
+                // 2. Enable VNC/Start
+                // QEMU starts in paused state or running? createQemuVm doesn't start it manually unless specified?
+                // `qm create` doesn't start.
+                await startVm(onlineNode, newVmid, 'qemu')
+
+                // 3. Mark Running
+                await prisma.server.update({
+                    where: { id: server.id },
+                    data: { status: 'RUNNING', consoleType: 'novnc' }
+                })
+
+            } else if (type === 'lxc') {
+                // === LXC Flow ===
+                await cloneLxc(onlineNode, template.vmid, newVmid, hostname, `Owner: ${session.user.email}`)
+                await setLxcConfig(onlineNode, newVmid, {
+                    cores: product.cpuCores,
+                    memory: product.memoryMB,
+                    swap: 512,
+                    password: password
+                })
+                // Start not strictly required for LXC to be "Ready" but usually user wants it on.
+                await startVm(onlineNode, newVmid, 'lxc')
+
+                await prisma.server.update({
+                    where: { id: server.id },
+                    data: { status: 'RUNNING' }
+                })
+            } else {
+                // === QEMU Template Flow (if supported) ===
+                // Not fully implemented in original code but similar to LXC clone
+                // For now, assuming only LXC templates or ISOs for this task scope unless logic exists.
+                // The task is specific to Custom ISO.
+                throw new Error("Template-based QEMU deployment not yet fully implemented in this wizard")
+            }
 
             // Create Resources Record
             await prisma.serverResources.create({
@@ -113,13 +214,13 @@ export async function deployServer(
                 }
             })
 
-        } catch (provError) {
+        } catch (provError: any) {
             console.error(provError)
             await prisma.server.update({
                 where: { id: server.id },
                 data: { status: 'ERROR' }
             })
-            return { error: "Provisioning failed during execution" }
+            return { error: `Provisioning failed: ${provError.message || provError}` }
         }
 
         revalidatePath("/dashboard")

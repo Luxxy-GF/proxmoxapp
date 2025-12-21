@@ -23,6 +23,7 @@ model User {
   servers       Server[]
   subusers      ServerUser[]
   sessions      Session[]
+  isos          Iso[]
 }
 
 model Account {
@@ -77,6 +78,7 @@ model Node {
   updatedAt     DateTime @updatedAt
   servers       Server[]
   ipPools       IPPool[]
+  isos          Iso[]
 }
 
 model Product {
@@ -142,6 +144,8 @@ model Server {
   user          User                 @relation(fields: [userId], references: [id])
   network       ServerNetwork?
   resources     ServerResources?
+  iso           Iso?                 @relation(fields: [isoId], references: [id])
+  isoId         String?
   subusers      ServerUser[]
   ips           IPAllocation[]
 
@@ -268,4 +272,24 @@ model IPAllocation {
   server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
 
   @@unique([poolId, ipAddress]) // Prevent duplicate allocation of same IP
+}
+
+model Iso {
+  id          String   @id @default(cuid())
+  name        String
+  filename    String
+  size        BigInt   // Size in bytes
+  status      String   // "Uploaded", "In Use"
+  storage     String   // "local" or other Proxmox storage
+  nodeId      String
+  userId      String
+  
+  description String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  node        Node     @relation(fields: [nodeId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+  servers     Server[] // Optional: Track usage
 }

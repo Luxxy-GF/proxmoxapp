@@ -14,6 +14,12 @@ export default async function NewServerPage() {
         include: { _count: { select: { allocations: true } } }
     })
 
+    // Fetch all ISOs for admin
+    const isos = await prisma.iso.findMany({
+        include: { user: true },
+        orderBy: { createdAt: 'desc' }
+    })
+
     return (
         <div className="max-w-5xl mx-auto py-8">
             <div className="mb-8">
@@ -27,6 +33,7 @@ export default async function NewServerPage() {
                 products={products}
                 groups={groups}
                 ipPools={ipPools}
+                isos={isos}
             />
         </div>
     )

@@ -25,7 +25,8 @@ import {
   Receipt,
   LineChart,
   ScrollText,
-  Network
+  Network,
+  Disc
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -154,6 +155,11 @@ export function AppSidebar({ servers = [], user, ...props }: React.ComponentProp
               title: "Settings",
               url: `/dashboard/server/${s.id}/settings`,
               icon: Settings2
+            },
+            {
+              title: "Media & Boot",
+              url: `/dashboard/server/${s.id}/media`,
+              icon: Disc
             }
           ]
         }))

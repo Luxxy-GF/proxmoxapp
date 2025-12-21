@@ -533,3 +533,101 @@ export async function getTicket(node: Node, username: string, password: string) 
     const json = await res.json()
     return json.data // { ticket, CSRFPreventionToken, ... }
 }
+
+// ========================================
+// Iso Custom Management Helpers
+// ========================================
+
+export async function createQemuVm(node: Node, vmid: number, name: string, options: {
+    cores: number,
+    memory: number,
+    net0?: string,
+    scsi0?: string, // Disk
+    ide2?: string, // CDROM
+    boot?: string
+}) {
+    const body: any = {
+        vmid,
+        name,
+        cores: options.cores,
+        memory: options.memory,
+        net0: options.net0 || "virtio,bridge=vmbr0,firewall=1",
+        scsihw: "virtio-scsi-pci",
+        ostype: "l26" // Linux 2.6/3.x/4.x/5.x (generic)
+    }
+
+    if (options.scsi0) body.scsi0 = options.scsi0
+    if (options.ide2) body.ide2 = options.ide2
+    if (options.boot) body.boot = options.boot
+
+    return callProxmoxApi(node, `/nodes/${node.proxmoxId}/qemu`, "POST", body)
+}
+
+export async function uploadIsoToStorage(node: Node, storage: string, filename: string, file: Blob | File) {
+    // Proxmox upload URL: /nodes/{node}/storage/{storage}/upload
+    // Requires 'content' (iso), 'filename', and the file.
+    // NOTE: This usually requires multipart/form-data.
+
+    const apiPath = `/nodes/${node.proxmoxId}/storage/${storage}/upload`
+
+    // We need to decrypt tokens manually for the custom fetch here to handle FormData if callProxmoxApi doesn't support it well.
+    // However, callProxmoxApi assumes x-www-form-urlencoded or JSON.
+    // We will implement a custom fetch here.
+
+    const tokenId = decrypt(node.tokenId)
+    const tokenSecret = decrypt(node.tokenSecret)
+
+    const url = `${node.endpoint}${apiPath}`.replace(/([^:])\/\/+/g, "$1/")
+
+    // Use native FormData
+    const formData = new FormData()
+    formData.append("content", "iso")
+    formData.append("filename", filename)
+    // When using native fetch/FormData in Node, passing the Blob/File directly works best for streaming logic if supported
+    // If 'file' comes from NextRequest.formData(), it's likely a native File/Blob implementation.
+    formData.append("file", file, filename)
+
+    const res = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Authorization": `PVEAPIToken=${tokenId}=${tokenSecret}`,
+            // Don't set Content-Type, let fetch set boundary
+        },
+        body: formData
+    })
+
+    if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`Failed to upload ISO: ${res.statusText} - ${text}`)
+    }
+
+    // Returns UPID usually
+    return await res.json()
+}
+
+export async function getStorageContent(node: Node, storage: string) {
+    // GET /nodes/{node}/storage/{storage}/content
+    return callProxmoxApi(node, `/nodes/${node.proxmoxId}/storage/${storage}/content`, "GET")
+}
+
+export async function deleteIsoFromStorage(node: Node, storage: string, volumeId: string) {
+    // Volume ID format: storage:iso/filename.iso
+    // Path: /nodes/{node}/storage/{storage}/content/{volume}
+
+    // If volumeId doesn't contain storage prefix, we might need to handle it.
+    // Usually Proxmox storage "content" list returns "local:iso/my.iso".
+    // The API expects the full volume ID.
+
+    return callProxmoxApi(node, `/nodes/${node.proxmoxId}/storage/${storage}/content/${volumeId}`, "DELETE")
+}
+
+export async function configQemuDisk(node: Node, vmid: number, config: {
+    ide2?: string, // CDROM media
+    boot?: string  // Boot order
+}) {
+    const body: any = {}
+    if (config.ide2) body.ide2 = config.ide2
+    if (config.boot) body.boot = config.boot
+
+    return callProxmoxApi(node, `/nodes/${node.proxmoxId}/qemu/${vmid}/config`, "POST", body)
+}
