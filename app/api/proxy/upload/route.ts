@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
         // @ts-ignore
         const nodeStream = Readable.fromWeb(req.body)
 
-        return new Promise((resolve) => {
+        return new Promise<NextResponse>((resolve) => {
             const lib = targetUrl.startsWith("https") ? require("https") : require("http")
 
             // Forward relevant headers

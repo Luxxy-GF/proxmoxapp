@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
 
         // Note: Proxmox `filename` param in upload is strictly the filename, NOT path.
         // It will land in .../template/iso/filename.iso
+        const storageFilename = file.name
 
         await uploadIsoToStorage(node, storageName, storageFilename, file)
 
