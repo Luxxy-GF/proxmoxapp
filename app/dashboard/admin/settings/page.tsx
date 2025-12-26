@@ -2,6 +2,7 @@ import { getFeatureFlags, getStripeSettings } from "@/lib/settings"
 import FeatureToggle from "@/components/admin/feature-toggle"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { updateStripeSettings } from "@/app/dashboard/admin/actions"
+import { StripeSettingsForm } from "@/components/admin/stripe-settings-form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -59,38 +60,7 @@ export default async function AdminSettingsPage() {
                     <CardDescription>Configure Stripe keys used for checkout and billing.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form action={updateStripeSettings} className="space-y-4 max-w-2xl">
-                        <div className="space-y-2">
-                            <Label htmlFor="publishableKey">Publishable key</Label>
-                            <Input
-                                id="publishableKey"
-                                name="publishableKey"
-                                defaultValue={stripe.publishableKey ?? ""}
-                                placeholder="pk_live_..."
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="secretKey">Secret key</Label>
-                            <Input
-                                id="secretKey"
-                                name="secretKey"
-                                type="password"
-                                defaultValue={stripe.secretKey ?? ""}
-                                placeholder="sk_live_..."
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="webhookSecret">Webhook signing secret (optional)</Label>
-                            <Input
-                                id="webhookSecret"
-                                name="webhookSecret"
-                                type="password"
-                                defaultValue={stripe.webhookSecret ?? ""}
-                                placeholder="whsec_..."
-                            />
-                        </div>
-                        <Button type="submit">Save Stripe settings</Button>
-                    </form>
+                    <StripeSettingsForm initialSettings={stripe} />
                 </CardContent>
             </Card>
         </div>

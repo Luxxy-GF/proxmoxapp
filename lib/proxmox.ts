@@ -312,7 +312,7 @@ export async function deleteVm(node: Node, vmid: number, type: "qemu" | "lxc") {
                     "GET"
                 )
 
-                if (status.data.status === "stopped") {
+                if (status.status === "stopped") {
                     break
                 }
 

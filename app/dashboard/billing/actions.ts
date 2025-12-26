@@ -9,8 +9,8 @@ import {
 import { headers } from "next/headers"
 import { getStripeSettings } from "@/lib/settings"
 
-function getOrigin() {
-  const headerList = headers()
+async function getOrigin() {
+  const headerList = await headers()
   const origin = headerList.get("origin")
   if (origin) return origin
 
@@ -49,7 +49,7 @@ export async function createCheckoutSession(productId: string) {
       },
     })
 
-    const origin = getOrigin()
+    const origin = await getOrigin()
     const stripeConfig = await getStripeSettings()
     if (!stripeConfig.secretKey || !stripeConfig.publishableKey) {
       return { error: "Stripe is not configured. Please add keys in Admin Settings." }

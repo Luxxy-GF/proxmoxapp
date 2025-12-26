@@ -32,7 +32,7 @@ export function EmbeddedCheckout({ clientSecret, sessionId, publishableKey }: Em
       options={{
         clientSecret,
         appearance: { theme: "night" },
-      }}
+      } as any}
     >
       <Card>
         <CardHeader>

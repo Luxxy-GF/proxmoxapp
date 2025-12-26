@@ -1,7 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Server as ServerIcon } from "lucide-react"
+import { Server as ServerIcon, Plus } from "lucide-react"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db"
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -12,6 +11,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
+import { ServerCard } from "@/components/dashboard/server-card"
+import { Card, CardContent } from "@/components/ui/card"
 
 export default async function Page() {
   const session = await auth()
@@ -27,58 +28,65 @@ export default async function Page() {
     include: {
       node: true,
       resources: true,
+    },
+    orderBy: {
+      createdAt: 'desc'
     }
   })
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbPage>Dashboard</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </header>
-      <div className="flex flex-1 flex-col gap-4 p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Your Servers</h2>
-          <Link href="/dashboard/deploy">
-            <Button>Deploy New Server</Button>
-          </Link>
+      <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-6 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="flex items-center gap-2">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbPage className="font-semibold">Your Servers</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {servers.length === 0 && (
-            <div className="col-span-3 text-center p-8 text-muted-foreground">
-              You don't have any servers yet. <Link href="/dashboard/deploy" className="underline">Deploy one now</Link>.
-            </div>
-          )}
-          {servers.map((server) => (
-            <Card key={server.id}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {server.name}
-                </CardTitle>
-                <ServerIcon className="text-muted-foreground h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{server.status}</div>
-                <p className="text-muted-foreground text-xs">{server.node.name} (VMID: {server.vmid})</p>
-                <div className="mt-4 flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">
-                    Cores: {server.resources?.cpuCores || '-'} | RAM: {server.resources?.memoryMB ? server.resources.memoryMB / 1024 + 'GB' : '-'}
-                  </span>
-                  <Link href={`/dashboard/server/${server.id}`}>
-                    <Button size="sm" variant="secondary">Manage</Button>
-                  </Link>
+
+        <Link href="/dashboard/deploy">
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Deploy New Server
+          </Button>
+        </Link>
+      </header>
+
+      <div className="flex flex-1 flex-col gap-6 p-6 bg-zinc-950/20 min-h-[calc(100vh-4rem)]">
+
+        {servers.length === 0 ? (
+          <div className="h-[60vh] flex flex-col items-center justify-center">
+            <Card className="w-full max-w-md bg-card/50 backdrop-blur-sm border-dashed">
+              <CardContent className="flex flex-col items-center justify-center p-10 text-center space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
+                  <ServerIcon className="w-8 h-8 text-primary" />
                 </div>
+                <div className="space-y-2">
+                  <h3 className="font-bold text-xl">No servers deployed yet</h3>
+                  <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                    Get started by deploying your first high-performance cloud server in seconds.
+                  </p>
+                </div>
+                <Link href="/dashboard/deploy">
+                  <Button size="lg" className="w-full">
+                    Deploy Your First Server
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {servers.map((server) => (
+              <ServerCard key={server.id} server={server} />
+            ))}
+          </div>
+        )}
       </div>
     </>
   )

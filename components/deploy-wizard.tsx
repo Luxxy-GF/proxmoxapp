@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Check, Loader2, Terminal, Server } from "lucide-react"
-import { getDefaultNodeStorage, deployServer } from "@/app/dashboard/deploy/actions"
+import { getDefaultNodeStorage, initDeploy, startDeploy, pollDeploy, finalizeDeploy } from "@/app/dashboard/deploy/actions"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-import { Disc } from "lucide-react"
+import { Disc, ChevronRight } from "lucide-react"
 
 interface WizardProps {
     groups: any[]
@@ -24,17 +24,18 @@ interface WizardProps {
 export function DeployWizard({ groups, products, ipPools, isos }: WizardProps) {
     const [step, setStep] = useState(1)
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
-    const [selectedIso, setSelectedIso] = useState<string | null>(null) // New state
-    const [osType, setOsType] = useState<"template" | "iso">("template") // Tab state
+    const [selectedIso, setSelectedIso] = useState<string | null>(null)
+    const [osType, setOsType] = useState<"template" | "iso">("template")
 
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
     const [selectedPool, setSelectedPool] = useState<string | null>(null)
-    const [selectedStorage, setSelectedStorage] = useState<string>("") // Storage State
-    const [storageOptions, setStorageOptions] = useState<any[]>([]) // Storage List
+    const [selectedStorage, setSelectedStorage] = useState<string>("")
+    const [storageOptions, setStorageOptions] = useState<any[]>([])
 
     const [config, setConfig] = useState({ hostname: "", password: "" })
     const [isDeploying, setIsDeploying] = useState(false)
     const [error, setError] = useState("")
+    const [logs, setLogs] = useState<string[]>([])
     const router = useRouter()
 
     // Fetch storage options when component mounts or tab changes to ISO
@@ -50,34 +51,125 @@ export function DeployWizard({ groups, products, ipPools, isos }: WizardProps) {
         }
     }, [osType])
 
+    const addLog = (msg: string) => {
+        setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`])
+    }
+
     const handleDeploy = async () => {
         if ((!selectedTemplate && !selectedIso) || !selectedProduct || !config.hostname) return
 
         setIsDeploying(true)
         setError("")
+        setLogs([])
+        setStep(5) // Move to log view
 
-        // If template mode, isoId is null. If iso mode, templateId is null.
-        const tId = osType === 'template' ? selectedTemplate : null
-        const iId = osType === 'iso' ? selectedIso : null
+        addLog(`Starting deployment for ${config.hostname}...`)
 
-        // Pass selectedStorage only if using ISO mode
-        const storageVal = osType === 'iso' ? selectedStorage : undefined
+        // 1. Init
+        addLog("Initializing deployment environment...")
+        const initRes = await initDeploy(
+            selectedTemplate,
+            selectedProduct,
+            config.hostname,
+            selectedPool,
+            selectedIso,
+            osType === 'iso' ? selectedStorage : undefined
+        )
 
-        const result = await deployServer(tId, selectedProduct, config.hostname, config.password, selectedPool, iId, storageVal)
-
-        if (result.error) {
-            setError(result.error)
+        if (initRes.error || !initRes.success) {
+            setError(initRes.error || "Init failed")
+            addLog(`ERROR: ${initRes.error}`)
             setIsDeploying(false)
-        } else {
-            router.push("/dashboard")
+            return
         }
+
+        const { serverId, vmid, nodeId, targetStorage, templateVmid } = initRes
+        addLog(`Reserved VMID: ${vmid} on Node: ${nodeId}`)
+        addLog(`Resources allocated. Target Storage: ${targetStorage}`)
+
+        // Get Product details (we need them for next steps, passed from server or component state? 
+        // Ideally actions returns them or we pass separate params. `initRes` didn't return product details.
+        // We can pass them from `products` prop finding by ID.
+        const product = products.find(p => p.id === selectedProduct)
+        if (!product) {
+            setError("Product definition missing")
+            return
+        }
+
+        // 2. Start Task
+        addLog(selectedIso ? "Starting VM creation from ISO..." : "Starting Template clone task...")
+        const startRes = await startDeploy(serverId!, nodeId, vmid, targetStorage || "", {
+            templateVmid,
+            isoId: selectedIso || undefined,
+            hostname: config.hostname,
+            cpuCores: product.cpuCores,
+            memoryMB: product.memoryMB,
+            diskGB: product.diskGB
+        })
+
+        if (startRes.error || !startRes.upid) {
+            setError(startRes.error || "Start task failed")
+            addLog(`ERROR: ${startRes.error}`)
+            setIsDeploying(false)
+            return
+        }
+
+        addLog(`Task started: ${startRes.upid}`)
+        addLog("Waiting for Proxmox task to complete...")
+
+        // 3. Poll
+        let taskFinished = false
+        while (!taskFinished) {
+            await new Promise(r => setTimeout(r, 2000)) // Poll every 2s
+            const pollRes = await pollDeploy(nodeId, startRes.upid)
+
+            if (pollRes.error) {
+                setError("Polling failed")
+                break
+            }
+
+            if (pollRes.status === 'stopped') {
+                taskFinished = true
+                if (pollRes.exitstatus !== 'OK') {
+                    setError(`Task failed: ${pollRes.exitstatus}`)
+                    addLog(`CRITICAL: Task exit status ${pollRes.exitstatus}`)
+                    setIsDeploying(false)
+                    return
+                }
+                addLog("Task completed successfully.")
+            } else {
+                // Optional: addLog("...") to show liveness, but might spam
+            }
+        }
+
+        // 4. Finalize
+        addLog("Configuring virtual machine settings...")
+        const finalRes = await finalizeDeploy(serverId!, nodeId, vmid, {
+            cpuCores: product.cpuCores,
+            memoryMB: product.memoryMB,
+            diskGB: product.diskGB,
+            password: config.password
+        })
+
+        if (finalRes.error) {
+            setError(finalRes.error)
+            addLog(`ERROR: ${finalRes.error}`)
+            setIsDeploying(false)
+            return
+        }
+
+        addLog("Server started successfully!")
+        addLog("Redirecting to dashboard...")
+
+        await new Promise(r => setTimeout(r, 1000))
+        router.push("/dashboard")
     }
 
     // Step 1: Select OS
     if (step === 1) {
         return (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Card className="border-zinc-800 bg-zinc-950/50">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[500px] mx-auto">
+                <Card className="border-zinc-800 bg-zinc-950">
                     <CardHeader>
                         <CardTitle>Select Operating System</CardTitle>
                         <CardDescription>Choose the OS image for your server.</CardDescription>
@@ -85,45 +177,44 @@ export function DeployWizard({ groups, products, ipPools, isos }: WizardProps) {
                     <CardContent>
                         <Tabs value={osType} onValueChange={(v) => {
                             setOsType(v as "template" | "iso")
-                            // Reset selections when switching tabs? Optional.
                         }}>
-                            <TabsList className="mb-6">
+                            <TabsList className="mb-6 grid w-full grid-cols-2">
                                 <TabsTrigger value="template">OS Templates</TabsTrigger>
                                 <TabsTrigger value="iso">Custom ISO</TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="template">
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {groups.map(group => (
-                                        <div key={group.id} className="col-span-full">
-                                            <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">{group.name}</h3>
-                                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                                {group.templates.map((t: any) => (
-                                                    <div
-                                                        key={t.id}
-                                                        className={cn(
-                                                            "cursor-pointer rounded-xl border-2 p-4 hover:bg-zinc-900 transition-all text-center flex flex-col items-center gap-3 relative",
-                                                            selectedTemplate === t.id ? "border-primary bg-primary/5" : "border-zinc-800 bg-zinc-950"
-                                                        )}
-                                                        onClick={() => setSelectedTemplate(t.id)}
-                                                    >
+                            <TabsContent value="template" className="space-y-6">
+                                {groups.map(group => (
+                                    <div key={group.id} className="space-y-3">
+                                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{group.name}</h3>
+                                        <div className="flex flex-wrap gap-3">
+                                            {group.templates.map((t: any) => (
+                                                <div
+                                                    key={t.id}
+                                                    className={cn(
+                                                        "cursor-pointer rounded-xl border-2 p-3 transition-all flex flex-col items-center justify-center gap-2 relative w-24 h-28 bg-zinc-900/50",
+                                                        selectedTemplate === t.id
+                                                            ? "border-zinc-600 bg-zinc-900"
+                                                            : "border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900"
+                                                    )}
+                                                    onClick={() => setSelectedTemplate(t.id)}
+                                                >
+                                                    <div className="flex-1 flex items-center justify-center">
                                                         {t.image ? (
                                                             <img src={t.image} alt={t.name} className="w-12 h-12 object-contain" />
                                                         ) : (
-                                                            <Terminal className="w-12 h-12 text-muted-foreground" />
-                                                        )}
-                                                        <span className="font-semibold">{t.name}</span>
-                                                        {selectedTemplate === t.id && (
-                                                            <div className="absolute top-2 right-2 bg-primary rounded-full p-0.5 text-primary-foreground">
-                                                                <Check className="w-3 h-3" />
-                                                            </div>
+                                                            <Terminal className="w-10 h-10 text-muted-foreground" />
                                                         )}
                                                     </div>
-                                                ))}
-                                            </div>
+                                                    <span className="font-bold text-sm">{t.name}</span>
+                                                    {selectedTemplate === t.id && (
+                                                        <div className="absolute inset-0 border-2 border-zinc-500 rounded-xl pointer-events-none" />
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
+                                ))}
                             </TabsContent>
 
                             <TabsContent value="iso">
@@ -137,39 +228,37 @@ export function DeployWizard({ groups, products, ipPools, isos }: WizardProps) {
                                         </Button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 gap-3">
                                         {isos.map(iso => (
                                             <div
                                                 key={iso.id}
                                                 onClick={() => setSelectedIso(iso.id)}
                                                 className={cn(
-                                                    "cursor-pointer rounded-xl border-2 p-4 transition-all flex items-start gap-4",
-                                                    selectedIso === iso.id ? "border-primary bg-primary/5" : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"
+                                                    "cursor-pointer rounded-xl border-2 p-3 transition-all flex items-center gap-3",
+                                                    selectedIso === iso.id ? "border-zinc-500 bg-zinc-900" : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"
                                                 )}
                                             >
                                                 <div className="p-2 rounded-full bg-zinc-900">
-                                                    <Disc className="h-6 w-6 text-zinc-400" />
+                                                    <Disc className="h-5 w-5 text-zinc-400" />
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-medium truncate pr-2" title={iso.name}>{iso.name}</h3>
-                                                    <p className="text-xs text-muted-foreground">
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-medium truncate text-sm" title={iso.name}>{iso.name}</h3>
+                                                    <p className="text-[10px] text-muted-foreground">
                                                         {(Number(iso.size) / (1024 * 1024 * 1024)).toFixed(2)} GB • {iso.status}
                                                     </p>
                                                 </div>
                                                 {selectedIso === iso.id && (
-                                                    <div className="ml-auto bg-primary rounded-full p-0.5 text-primary-foreground">
-                                                        <Check className="w-3 h-3" />
-                                                    </div>
+                                                    <Check className="w-4 h-4 text-zinc-400" />
                                                 )}
                                             </div>
                                         ))}
                                     </div>
                                 )}
 
-                                <div className="mt-8 space-y-4 max-w-sm">
-                                    <Label>Target Storage</Label>
+                                <div className="mt-8 space-y-3">
+                                    <Label className="text-xs uppercase text-muted-foreground font-semibold">Target Storage</Label>
                                     <Select value={selectedStorage} onValueChange={setSelectedStorage} disabled={storageOptions.length === 0}>
-                                        <SelectTrigger>
+                                        <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Select storage for VM disk" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -180,14 +269,16 @@ export function DeployWizard({ groups, products, ipPools, isos }: WizardProps) {
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <p className="text-xs text-muted-foreground">Select where the VM's main disk will be created.</p>
                                 </div>
-
                             </TabsContent>
                         </Tabs>
                     </CardContent>
-                    <CardFooter className="justify-end">
-                        <Button onClick={() => setStep(2)} disabled={osType === 'template' ? !selectedTemplate : !selectedIso}>
+                    <CardFooter className="justify-end pt-2">
+                        <Button
+                            onClick={() => setStep(2)}
+                            disabled={osType === 'template' ? !selectedTemplate : !selectedIso}
+                            className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
+                        >
                             Next: Select Plan
                         </Button>
                     </CardFooter>
@@ -243,12 +334,6 @@ export function DeployWizard({ groups, products, ipPools, isos }: WizardProps) {
 
     // Step 3: Select Network (IP Pool)
     if (step === 3) {
-        const totalIPs = (pool: any) => {
-            const start = pool.startIP.split('.').reduce((acc: number, octet: string) => (acc << 8) + parseInt(octet), 0)
-            const end = pool.endIP.split('.').reduce((acc: number, octet: string) => (acc << 8) + parseInt(octet), 0)
-            return end - start + 1
-        }
-
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <Card className="border-zinc-800 bg-zinc-950/50">
@@ -265,7 +350,11 @@ export function DeployWizard({ groups, products, ipPools, isos }: WizardProps) {
                         ) : (
                             <div className="grid gap-4">
                                 {ipPools.map((pool: any) => {
-                                    const total = totalIPs(pool)
+                                    // Helper function moved inside to avoid scope issues in render extraction if any, 
+                                    // but for now keeping logic clean.
+                                    const start = pool.startIP.split('.').reduce((acc: number, octet: string) => (acc << 8) + parseInt(octet), 0)
+                                    const end = pool.endIP.split('.').reduce((acc: number, octet: string) => (acc << 8) + parseInt(octet), 0)
+                                    const total = end - start + 1
                                     const used = pool.allocations?.length || 0
                                     const available = total - used
 
@@ -317,7 +406,44 @@ export function DeployWizard({ groups, products, ipPools, isos }: WizardProps) {
         )
     }
 
-    // Step 4: Configure
+    // Step 5: Provisioning Log Console
+    if (step === 5) {
+        return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <Card className="border-zinc-800 bg-zinc-950">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                            Deploying Server
+                        </CardTitle>
+                        <CardDescription>Please wait while we provision your infrastructure.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="bg-black rounded-lg border border-zinc-800 p-4 h-[400px] overflow-y-auto font-mono text-sm">
+                            {logs.map((log, i) => (
+                                <div key={i} className="text-zinc-300">
+                                    <span className="text-zinc-500 mr-2">{log.substring(0, log.indexOf(']') + 1)}</span>
+                                    <span className={cn(
+                                        log.includes("ERROR") ? "text-red-500" :
+                                            log.includes("CRITICAL") ? "text-red-500 font-bold" :
+                                                log.includes("success") ? "text-green-500" : "text-zinc-300"
+                                    )}>
+                                        {log.substring(log.indexOf(']') + 1)}
+                                    </span>
+                                </div>
+                            ))}
+                            {/* Auto-scroll anchor if needed */}
+                        </div>
+                    </CardContent>
+                    <CardFooter className="justify-between">
+                        {/* Optional buttons */}
+                    </CardFooter>
+                </Card>
+            </div>
+        )
+    }
+
+    // Step 4: Configure (Default)
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Card className="border-zinc-800 bg-zinc-950/50">
