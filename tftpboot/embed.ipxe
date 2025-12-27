@@ -1,0 +1,10 @@
+#!ipxe
+
+:start
+dhcp
+chain http://10.15.0.2:3000/api/pxe/ipxe?mac=${net0/mac} || goto retry
+
+:retry
+echo Boot failed, retrying...
+sleep 3
+goto start

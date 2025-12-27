@@ -29,7 +29,11 @@ export function isValidIPv4(ip: string): boolean {
  * Validates that the new pool's range does not overlap with existing enabled pools on the same node.
  * This should be called before creating or updating a pool.
  */
-export async function validateIPPoolRange(nodeId: string, startIP: string, endIP: string, excludePoolId?: string) {
+/**
+ * Validates that the new pool's range does not overlap with existing enabled pools on the same node (or global if node is null).
+ * This should be called before creating or updating a pool.
+ */
+export async function validateIPPoolRange(nodeId: string | null, startIP: string, endIP: string, excludePoolId?: string) {
     const start = ipToLong(startIP)
     const end = ipToLong(endIP)
 
@@ -37,13 +41,9 @@ export async function validateIPPoolRange(nodeId: string, startIP: string, endIP
         throw new Error("Start IP must be before End IP")
     }
 
-    // correct: we prefer "database authority", handling overlap checks via DB queries roughly
-    // Since math in DB for IP strings is hard, we fetch all pools for the node and check in-memory.
-    // Assuming number of pools per node is reasonable (e.g. < 100).
-
     const existingPools = await prisma.iPPool.findMany({
         where: {
-            nodeId,
+            nodeId: nodeId === null ? null : nodeId, // Explicitly handle null for Prisma types
             enabled: true,
             id: excludePoolId ? { not: excludePoolId } : undefined
         }
@@ -54,8 +54,6 @@ export async function validateIPPoolRange(nodeId: string, startIP: string, endIP
         const poolEnd = ipToLong(pool.endIP)
 
         // Check for overlap
-        // Range A (start...end) overlaps with Range B (poolStart...poolEnd) if:
-        // start <= poolEnd AND end >= poolStart
         if (start <= poolEnd && end >= poolStart) {
             throw new Error(`Range overlaps with existing pool "${pool.name}" (${pool.startIP} - ${pool.endIP})`)
         }
@@ -94,29 +92,28 @@ export async function getNextFreeIP(poolId: string): Promise<string | null> {
 }
 
 /**
- * Allocates an IP for a server.
+ * Allocates an IP for a server (VM or Dedicated).
  * Uses a transaction to ensure integrity.
  */
-export async function allocateIP(poolId: string, serverId: string) {
+export async function allocateIP(poolId: string, targetId: string, type: 'vm' | 'dedicated' = 'vm') {
     return await prisma.$transaction(async (tx) => {
-        // 1. Lock the pool/allocations (Prisma doesn't easily support explicit locking, but we can rely on atomic insert constraints unique error handling)
-        // Better: Calculate next free based on current state.
-        // There is a race condition here if two requests try to allocate same IP.
-        // We will optimistically try to pick one.
-
-        // Retries could be handled by the caller or simple loop here.
-        // For now, simple implementation:
-
         const ip = await getNextFreeIP(poolId)
         if (!ip) throw new Error("No available IPs in this pool")
 
         // 2. Create allocation
+        const data: any = {
+            poolId,
+            ipAddress: ip
+        }
+
+        if (type === 'vm') {
+            data.serverId = targetId
+        } else {
+            data.dedicatedServerId = targetId
+        }
+
         const allocation = await tx.iPAllocation.create({
-            data: {
-                poolId,
-                serverId,
-                ipAddress: ip
-            }
+            data
         })
 
         return allocation
@@ -126,8 +123,15 @@ export async function allocateIP(poolId: string, serverId: string) {
 /**
  * Release all IPs for a server.
  */
-export async function releaseIPs(serverId: string) {
+export async function releaseIPs(targetId: string, type: 'vm' | 'dedicated' = 'vm') {
+    const where: any = {}
+    if (type === 'vm') {
+        where.serverId = targetId
+    } else {
+        where.dedicatedServerId = targetId
+    }
+
     await prisma.iPAllocation.deleteMany({
-        where: { serverId }
+        where
     })
 }

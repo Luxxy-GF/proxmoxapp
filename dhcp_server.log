@@ -1,0 +1,1138 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+DHCP Server starting on 10.15.0.1...
+DHCP Server listening on <ref *1> Socket {
+  _events: [Object: null prototype] {
+    message: [Function (anonymous)],
+    listening: [ [Function (anonymous)], [Function: onListening] ],
+    close: [Function (anonymous)],
+    error: [ [Function (anonymous)], [Function: removeListeners] ]
+  },
+  _eventsCount: 4,
+  _maxListeners: undefined,
+  type: 'udp4',
+  [Symbol(shapeMode)]: false,
+  [Symbol(kCapture)]: false,
+  [Symbol(async_id_symbol)]: 114,
+  [Symbol(state symbol)]: {
+    handle: UDP {
+      lookup: [Function: bound lookup4],
+      onmessage: [Function: onMessage],
+      onerror: [Function: onError],
+      [Symbol(owner_symbol)]: [Circular *1]
+    },
+    receiving: true,
+    bindState: 2,
+    connectState: 0,
+    queue: undefined,
+    reuseAddr: true,
+    reusePort: undefined,
+    ipv6Only: undefined,
+    recvBufferSize: undefined,
+    sendBufferSize: undefined,
+    receiveBlockList: undefined,
+    sendBlockList: undefined
+  }
+}
+Option 97 not known
+Option 93 not known
+Option 94 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   2,   3,   5,   6,  11,  12,
+     13,  15,  16,  17,  18,  43,  54,
+     67, 128, 129, 130, 131, 132, 133,
+    134, 135
+  ],
+  '57': 1260,
+  '60': 'PXEClient:Arch:00000:UNDI:002001'
+}
+Option 97 not known
+Option 93 not known
+Option 94 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:49:28.184Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   2,   3,   5,   6,  11,  12,
+     13,  15,  16,  17,  18,  43,  54,
+     67, 128, 129, 130, 131, 132, 133,
+    134, 135
+  ],
+  '57': 1260,
+  '60': 'PXEClient:Arch:00000:UNDI:002001'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:49:41.475Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:49:47.023Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:49:52.570Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:49:58.118Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:50:03.720Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:50:09.377Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:50:15.199Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:50:21.680Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:50:30.468Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '53': 1,
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}
+Option 93 not known
+Option 94 not known
+Option 77 not known
+Option 175 not known
+Option 97 not known
+[DHCP DEBUG] Received request from MAC: '94-18-82-00-9E-48'
+[DHCP DEBUG] Normalized MAC: '94:18:82:00:9e:48'
+[DHCP] BootFile Check for 94-18-82-00-9E-48: UserClass=, VendorClass=, isIpxe=false
+DHCP Error: Unknown option 128 undefined
+DHCP Error: Unknown option 129 undefined
+DHCP Error: Unknown option 130 undefined
+DHCP Error: Unknown option 131 undefined
+DHCP Error: Unknown option 132 undefined
+DHCP Error: Unknown option 133 undefined
+DHCP Error: Unknown option 134 undefined
+DHCP Error: Unknown option 135 undefined
+DHCP Error: Unknown option 175 undefined
+DHCP Error: Unknown option 203 undefined
+DHCP Bound: {
+  '94-18-82-00-9E-48': {
+    address: '10.15.0.161',
+    leasePeriod: 86400,
+    server: '10.15.0.1',
+    state: 'BOUND',
+    bindTime: 2025-12-27T01:50:47.000Z
+  }
+}
+[DHCP DEBUG] DB Lookup result for '94-18-82-00-9E-48': gen9
+[DHCP] Message: {
+  '50': '10.15.0.161',
+  '53': 3,
+  '54': '10.15.0.1',
+  '55': [
+      1,   3,   6,   7,  12,  15,  17,
+     26,  42,  43,  66,  67, 119, 121,
+    128, 129, 130, 131, 132, 133, 134,
+    135, 175, 203
+  ],
+  '57': 1472,
+  '60': 'PXEClient:Arch:00000:UNDI:002001',
+  '61': '\x01\x14\x18\x02'
+}

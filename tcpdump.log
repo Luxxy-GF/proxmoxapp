@@ -1,0 +1,90 @@
+tcpdump: data link type LINUX_SLL2
+tcpdump: listening on any, link-type LINUX_SLL2 (Linux cooked v2), snapshot length 262144 bytes
+01:06:24.878767 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:06:24.938130 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:06:24.968184 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:06:24.968206 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:06:25.879876 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:06:25.938421 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:06:25.968354 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:06:25.968392 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:06:29.370133 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:06:30.414125 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:06:31.454185 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:06:35.017528 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:06:36.018836 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:06:44.369771 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:06:45.178026 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:06:45.178059 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:06:45.178072 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:06:45.198501 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:06:45.374089 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:06:46.178997 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:06:46.178997 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:06:46.179042 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:06:46.198819 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:06:46.414178 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:06:55.357623 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:06:56.358806 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:06:59.369564 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:00.423986 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:01.454085 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:05.478234 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:07:05.517933 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:07:05.517965 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:07:05.527968 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:07:06.479318 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:07:06.518277 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:07:06.518312 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:07:06.528257 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:07:14.369283 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:15.373961 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:15.678194 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:07:16.413961 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:16.678620 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:07:25.834531 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:07:25.848433 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:07:25.848434 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:07:25.848455 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:07:26.835680 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:07:26.848847 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:07:26.848847 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:07:26.848875 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:07:29.375336 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:30.413928 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:31.463901 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:36.058392 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:07:37.059487 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:07:44.369777 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:45.373848 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:46.188852 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:07:46.192808 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:07:46.192830 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:07:46.210746 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:07:46.413961 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:07:47.189828 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:07:47.193026 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:07:47.193049 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:07:47.210875 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:07:56.417511 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:07:57.418695 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:07:59.369777 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:08:00.414292 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:08:01.453847 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:08:06.597323 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:08:06.597347 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:08:06.638192 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:08:06.697626 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:08:07.598426 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.26 tell 10.1.1.1, length 46
+01:08:07.598484 eth0  Out ifindex 2 bc:24:11:40:d0:44 ethertype ARP (0x0806), length 48: Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.26 is-at bc:24:11:40:d0:44, length 28
+01:08:07.638404 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.1, length 46
+01:08:07.697807 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.80 tell 10.1.1.1, length 46
+01:08:14.369563 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:08:15.373833 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:08:16.413749 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.222 tell 10.1.1.1, length 46
+01:08:16.817730 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+01:08:17.818860 eth0  B   ifindex 2 9e:05:d6:59:e4:f0 ethertype ARP (0x0806), length 66: Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.247 tell 10.1.1.1, length 46
+
+84 packets captured
+94 packets received by filter
+0 packets dropped by kernel

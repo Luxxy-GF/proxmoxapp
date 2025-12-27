@@ -1,0 +1,12 @@
+{
+    "name": "lumen-console-session",
+    "version": "1.0.0",
+    "description": "Dockerized Console Bridge",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "puppeteer-core": "^21.0.0"
+    }
+}

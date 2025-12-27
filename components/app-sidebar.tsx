@@ -65,6 +65,11 @@ const data = {
       url: "/dashboard/isos",
       icon: Disc,
     },
+    {
+      title: "Dedicated",
+      url: "/dashboard/dedicated",
+      icon: Server,
+    },
   ],
 
   admin: [
@@ -112,6 +117,26 @@ const data = {
       title: "Networking",
       url: "/dashboard/admin/networking",
       icon: Network,
+    },
+    {
+      title: "Dedicated Servers",
+      url: "/dashboard/admin/dedicated",
+      icon: Server,
+    },
+    {
+      title: "Connections",
+      url: "/dashboard/admin/connections",
+      icon: LayoutDashboard, // Reuse or find better icon
+    },
+    {
+      title: "PXE Settings",
+      url: "/dashboard/admin/pxe",
+      icon: Network,
+    },
+    {
+      title: "PXE Profiles",
+      url: "/dashboard/admin/pxe/profiles",
+      icon: ScrollText,
     },
   ],
 }

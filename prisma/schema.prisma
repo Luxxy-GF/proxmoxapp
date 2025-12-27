@@ -24,6 +24,7 @@ model User {
   subusers      ServerUser[]
   sessions      Session[]
   isos          Iso[]
+  dedicatedServers DedicatedServer[]
 }
 
 model Account {
@@ -242,7 +243,7 @@ model ServerUser {
 model IPPool {
   id          String   @id @default(cuid())
   name        String
-  nodeId      String
+  nodeId      String?
   ipVersion   String   @default("v4") // "v4" or "v6"
   startIP     String
   endIP       String
@@ -257,19 +258,21 @@ model IPPool {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  node        Node           @relation(fields: [nodeId], references: [id])
+  node        Node?          @relation(fields: [nodeId], references: [id])
   allocations IPAllocation[]
 }
 
 model IPAllocation {
   id        String   @id @default(cuid())
-  poolId    String
-  serverId  String
-  ipAddress String
-  createdAt DateTime @default(now())
+  poolId           String
+  serverId         String?
+  dedicatedServerId String?
+  ipAddress        String
+  createdAt        DateTime @default(now())
 
-  pool      IPPool   @relation(fields: [poolId], references: [id])
-  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  pool             IPPool           @relation(fields: [poolId], references: [id])
+  server           Server?          @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  dedicatedServer  DedicatedServer? @relation(fields: [dedicatedServerId], references: [id], onDelete: Cascade)
 
   @@unique([poolId, ipAddress]) // Prevent duplicate allocation of same IP
 }
@@ -300,3 +303,180 @@ model Setting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// --- Bare Metal / Dedicated Servers ---
+
+model DedicatedServer {
+  id            String    @id @default(cuid())
+  userId        String?
+  nodeId        String?   // Optional physical location/node reference
+  
+  hostname      String
+  macAddress    String    @unique // Primary MAC for PXE
+  primaryIpv4   String?
+  gateway       String?
+  netmask       String?
+  nameservers   String?   // comma separated
+  vlanId        Int?
+  rack          String?
+  
+  status        String    @default("OFFLINE") // OFFLINE, INSTALLING, ACTIVE, ERROR
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User?     @relation(fields: [userId], references: [id])
+  hardware      DedicatedHardware?
+  events        DedicatedEvent[]
+  assignments   ConnectionAssignment[]
+  installs      PXEInstall[]
+  allocations   IPAllocation[]
+}
+
+model DedicatedHardware {
+  id            String          @id @default(cuid())
+  serverId      String          @unique
+  
+  cpuModel      String
+  cpuCores      Int
+  ramMiB        Int
+  disksJson     Json?           // e.g. [{name: "sda", size: "1TB", type: "NVMe"}]
+  nicsJson      Json?           // Additional NICs
+  vendor        String?
+  model         String?
+  serial        String?
+
+  server        DedicatedServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model DedicatedEvent {
+  id            String          @id @default(cuid())
+  serverId      String
+  type          String          // POWER, PXE, INSTALL, CONSOLE, INVENTORY
+  message       String
+  payloadJson   Json?
+  
+  createdAt     DateTime        @default(now())
+
+  server        DedicatedServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+// --- Connections (IPMI, DHCP, PXE Providers) ---
+
+model Connection {
+  id            String    @id @default(cuid())
+  type          String    // IPMI, DHCP, PXE
+  name          String
+  description   String?
+  encryptedConfig String? // Encrypted JSON config (host, user, pass, etc.)
+  agentId       String?   // For remote agents
+  enabled       Boolean   @default(true)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  assignments   ConnectionAssignment[]
+}
+
+model ConnectionAssignment {
+  id            String      @id @default(cuid())
+  serverId      String
+  connectionId  String
+  role          String      @default("PRIMARY") // PRIMARY, FALLBACK
+  
+  createdAt     DateTime    @default(now())
+
+  server        DedicatedServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  connection    Connection      @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, connectionId])
+}
+
+// --- PXE Manager ---
+
+model PXEProfile {
+  id            String    @id @default(cuid())
+  name          String
+  kind          String    // INSTALL, RESCUE, INVENTORY
+  osFamily      String    // DEBIAN, UBUNTU, ALMALINUX, OTHER
+  tags          String[]  // Array of strings in Postgres
+  enabled       Boolean   @default(true)
+  
+  bootScriptTemplate String? // Text content for custom iPXE logic
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  diskRules     ProfileDiskLayoutRule[]
+  installs      PXEInstall[]
+}
+
+model DiskLayout {
+  id            String    @id @default(cuid())
+  name          String
+  syntax        String    // CLOUDINIT_AUTOINSTALL, PRESEED, KICKSTART, SCRIPT
+  tags          String[]
+  content       String    // The actual layout config text
+  enabled       Boolean   @default(true)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profileRules  ProfileDiskLayoutRule[]
+  installs      PXEInstall[]
+}
+
+model ProfileDiskLayoutRule {
+  id            String      @id @default(cuid())
+  profileId     String
+  diskLayoutId  String
+  matchMode     String      @default("OPTIONAL") // OPTIONAL, FORCE
+
+  createdAt     DateTime    @default(now())
+
+  profile       PXEProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  diskLayout    DiskLayout  @relation(fields: [diskLayoutId], references: [id], onDelete: Cascade)
+}
+
+model PXEInstall {
+  id            String      @id @default(cuid())
+  serverId      String
+  profileId     String
+  diskLayoutId  String?
+  
+  state         String      @default("QUEUED") // QUEUED, RUNNING, DONE, FAILED
+  token         String      @unique // Auth token for callbacks
+  
+  startedAt     DateTime    @default(now())
+  finishedAt    DateTime?
+  lastCallbackAt DateTime?
+  logText       String?
+
+  // User Configuration (Password, SSH Keys, etc.)
+  userDataJson  Json?
+
+  // Progress Tracking
+  progress      Int         @default(0) // 0-100
+  stage         String      @default("STARTING") // e.g., "PARTITIONING", "INSTALLING_PACKAGES"
+
+  server        DedicatedServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  profile       PXEProfile      @relation(fields: [profileId], references: [id])
+  diskLayout    DiskLayout?     @relation(fields: [diskLayoutId], references: [id])
+}
+
+model PXESettings {
+  id              String   @id @default(cuid())
+  interface       String   @default("ens19")
+  dhcpRangeStart  String   @default("10.15.0.100")
+  dhcpRangeEnd    String   @default("10.15.0.200")
+  subnetMask      String   @default("255.255.255.0")
+  leaseTime       String   @default("24h")
+  gateway         String   @default("10.15.0.1")
+  dnsServer       String   @default("8.8.8.8")
+  tftpRoot        String   @default("/srv/tftp")
+  httpBootUrl     String   @default("http://10.15.0.2:3000/api/pxe/ipxe")
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
