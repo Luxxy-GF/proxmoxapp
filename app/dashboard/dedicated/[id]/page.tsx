@@ -12,8 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Loader2, Power, RefreshCw, Terminal, HardDrive, Activity, Server as ServerIcon, Cpu, MemoryStick, Globe } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { ReinstallDialog } from "@/components/dedicated/reinstall-dialog";
-import { InstallProgress } from "@/components/dedicated/install-progress";
+import { ReinstallPane } from "@/components/dedicated/ReinstallPane";
+import { InventoryPane } from "@/components/dedicated/InventoryPane";
+import { ServerPowerStatus } from "@/components/dedicated/ServerPowerStatus";
+import { HardwareGraphs } from "@/components/dedicated/HardwareGraphs";
 
 export default function DedicatedServerPage() {
     const { id } = useParams();
@@ -45,7 +47,7 @@ export default function DedicatedServerPage() {
             const res = await fetch("/api/baremetal/pxe/profiles");
             if (res.ok) {
                 const data = await res.json();
-                setProfiles(data.filter((p: any) => p.kind === 'INSTALL' && p.enabled));
+                setProfiles(data.filter((p: any) => ['PRESEED', 'KICKSTART', 'WINDOWS'].includes(p.templateType) && p.enabled));
             }
         } catch (e) {
             console.error(e);
@@ -188,6 +190,7 @@ export default function DedicatedServerPage() {
                             server.status === 'ACTIVE' ? 'default' :
                                 server.status === 'INSTALLING' ? 'secondary' : 'destructive'
                         }>{server.status}</Badge>
+                        <ServerPowerStatus serverId={id as string} />
                     </div>
                     <p className="text-muted-foreground font-mono mt-1">{server.macAddress}</p>
                 </div>
@@ -199,8 +202,10 @@ export default function DedicatedServerPage() {
             <Tabs defaultValue="overview" className="w-full">
                 <TabsList>
                     <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="inventory">Inventory</TabsTrigger>
                     <TabsTrigger value="power">Power</TabsTrigger>
                     <TabsTrigger value="reinstall">Reinstall</TabsTrigger>
+                    <TabsTrigger value="activity">Activity</TabsTrigger>
                     <TabsTrigger value="console" disabled>Console</TabsTrigger>
                 </TabsList>
 
@@ -288,40 +293,14 @@ export default function DedicatedServerPage() {
                         </Card>
                     </div>
 
-                    {/* Action Cards */}
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-sm font-medium">Hardware Details</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {server.hardware?.disksJson && (
-                                    <div className="text-xs space-y-1">
-                                        <p className="font-semibold mb-2">Physical Disks:</p>
-                                        {Array.isArray(server.hardware.disksJson) && (server.hardware.disksJson as any[])
-                                            .filter((d: any) => !d.name.startsWith('loop') && !d.name.startsWith('sr'))
-                                            .map((d: any, i: number) => (
-                                                <div key={i} className="flex justify-between border-b pb-1 last:border-0">
-                                                    <span className="font-mono">{d.name}</span>
-                                                    <span className="text-muted-foreground">{d.size} ({d.model || "Unknown"})</span>
-                                                </div>
-                                            ))}
-                                    </div>
-                                )}
+                    <HardwareGraphs serverId={id as string} />
 
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="w-full mt-4"
-                                    onClick={handleInventoryScan}
-                                    disabled={actionLoading || server.status === 'INSTALLING' || server.status === 'INVENTORYING'}
-                                >
-                                    {server.status === 'INVENTORYING' ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <HardDrive className="mr-2 h-3 w-3" />}
-                                    {server.status === 'INVENTORYING' ? "Scanning..." : "Scan Hardware"}
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </div>
+                    {/* Action Cards */}
+                    {/* Hardware Details moved to Inventory Tab */}
+                </TabsContent>
+
+                <TabsContent value="inventory" className="mt-4">
+                    <InventoryPane server={server} onScan={handleInventoryScan} />
                 </TabsContent>
 
                 <TabsContent value="power" className="mt-4">
@@ -357,57 +336,44 @@ export default function DedicatedServerPage() {
                 </TabsContent>
 
                 <TabsContent value="reinstall" className="mt-4">
-                    {/* Check if there's an active install */}
-                    {server.installs && server.installs.length > 0 &&
-                        ['QUEUED', 'RUNNING'].includes(server.installs[0].state) ? (
-                        <InstallProgress
-                            install={server.installs[0]}
-                            onCancel={handleCancel}
-                        />
-                    ) : (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Reinstall Operating System</CardTitle>
-                                <CardDescription className="text-red-500">
-                                    Warning: Reinstalling will permanently delete all data on the server disks.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4 max-w-lg">
-                                <ReinstallDialog
-                                    server={server}
-                                    profiles={profiles}
-                                    onReinstall={handleReinstall}
-                                />
-                            </CardContent>
-                        </Card>
-                    )}
+                    <ReinstallPane
+                        server={server}
+                        profiles={profiles}
+                        onReinstall={handleReinstall}
+                        onCancel={handleCancel}
+                    />
+                </TabsContent>
 
-                    {/* Show previous/completed install if present and not running */}
-                    {server.installs && server.installs.length > 0 &&
-                        ['DONE', 'FAILED'].includes(server.installs[0].state) && (
-                            <div className="mt-6">
-                                <h3 className="mb-2 text-sm font-medium">Last Installation</h3>
-                                <InstallProgress install={server.installs[0]} />
+                <TabsContent value="activity" className="mt-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Activity Log</CardTitle>
+                            <CardDescription>Audit trail of all actions performed on this server.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="border rounded-md bg-muted/40 p-4 h-[600px] overflow-y-auto font-mono text-xs">
+                                {server.events?.length === 0 ? <div className="text-muted-foreground">No events recorded.</div> : null}
+                                {server.events
+                                    ?.filter((e: any) => !e.message.includes('status requested') && !e.message.toLowerCase().includes('checking'))
+                                    ?.map((e: any) => {
+                                        const isError = e.type === 'ERROR' || e.severity === 'ERROR';
+                                        const isWarn = e.severity === 'WARNING';
+                                        const colorClass = isError ? 'text-red-500' : isWarn ? 'text-yellow-500' : 'text-blue-500';
+
+                                        return (
+                                            <div key={e.id} className="mb-2 border-b border-border/50 pb-2 last:border-0 last:pb-0">
+                                                <span className="text-muted-foreground mr-2">[{new Date(e.createdAt).toLocaleString()}]</span>
+                                                <span className={`font-bold mr-2 ${colorClass}`}>{e.type}</span>
+                                                <span>{e.message}</span>
+                                            </div>
+                                        );
+                                    })}
                             </div>
-                        )}
+                        </CardContent>
+                    </Card>
                 </TabsContent>
             </Tabs>
 
-            <Separator />
-
-            <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Activity Log</h3>
-                <div className="border rounded-md bg-muted/40 p-4 h-64 overflow-y-auto font-mono text-xs">
-                    {server.events?.length === 0 ? <div className="text-muted-foreground">No events recorded.</div> : null}
-                    {server.events?.map((e: any) => (
-                        <div key={e.id} className="mb-2 border-b border-border/50 pb-2 last:border-0 last:pb-0">
-                            <span className="text-muted-foreground mr-2">[{new Date(e.createdAt).toLocaleString()}]</span>
-                            <span className={`font-bold mr-2 ${e.type === 'ERROR' ? 'text-red-500' : 'text-blue-500'}`}>{e.type}</span>
-                            <span>{e.message}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
         </div>
     );
 }

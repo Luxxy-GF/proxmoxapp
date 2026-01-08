@@ -331,28 +331,44 @@ model DedicatedServer {
   assignments   ConnectionAssignment[]
   installs      PXEInstall[]
   allocations   IPAllocation[]
+  metrics       HardwareMetric[]
 }
 
 model DedicatedHardware {
-  id            String          @id @default(cuid())
-  serverId      String          @unique
+  id                String          @id @default(cuid())
+  serverId          String          @unique
   
-  cpuModel      String
-  cpuCores      Int
-  ramMiB        Int
-  disksJson     Json?           // e.g. [{name: "sda", size: "1TB", type: "NVMe"}]
-  nicsJson      Json?           // Additional NICs
-  vendor        String?
-  model         String?
-  serial        String?
+  cpuModel          String
+  cpuCores          Int
+  cpuSpeed          String?         // e.g. "2.4GHz"
+  
+  ramMiB            Int
+  ramModulesJson    Json?           // Individual RAM modules: [{model, size, serial, slot}]
+  
+  disksJson         Json?           // Physical disks: [{name, size, model, serial}]
+  nicsJson          Json?           // Network adapters: [{model, mac, vendor, product}]
+  
+  biosVendor        String?
+  biosVersion       String?
+  biosDate          String?
+  
+  mainboardModel    String?
+  mainboardSerial   String?
+  
+  storageControllersJson Json?      // Storage controllers: [{model, vendor, type}]
+  
+  vendor            String?
+  model             String?
+  serial            String?
 
-  server        DedicatedServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  server            DedicatedServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
 }
 
 model DedicatedEvent {
   id            String          @id @default(cuid())
   serverId      String
   type          String          // POWER, PXE, INSTALL, CONSOLE, INVENTORY
+  severity      String          @default("INFO") // INFO, WARNING, ERROR
   message       String
   payloadJson   Json?
   
@@ -394,21 +410,112 @@ model ConnectionAssignment {
 
 // --- PXE Manager ---
 
-model PXEProfile {
-  id            String    @id @default(cuid())
-  name          String
-  kind          String    // INSTALL, RESCUE, INVENTORY
-  osFamily      String    // DEBIAN, UBUNTU, ALMALINUX, OTHER
-  tags          String[]  // Array of strings in Postgres
-  enabled       Boolean   @default(true)
-  
-  bootScriptTemplate String? // Text content for custom iPXE logic
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+enum TemplateType {
+  KICKSTART
+  PRESEED
+  WINDOWS
+  RESCUE
+  UTILITY
+}
 
-  diskRules     ProfileDiskLayoutRule[]
-  installs      PXEInstall[]
+enum CachingPolicy {
+  SMART
+  DELETE_DAILY
+  CLEAR_BEFORE_INSTALL
+  KEEP_LONG
+}
+
+enum NetworkMode {
+  AUTO
+  STATIC
+  DHCP
+}
+
+enum CompletionEvent {
+  AFTER_PXE
+  AFTER_FIRST_BOOT_BEFORE_SCRIPTS
+  AFTER_FIRST_BOOT_AFTER_SCRIPTS
+  AFTER_FIRST_PXE_ACCESS
+}
+
+enum ServerTargetType {
+  DEDICATED
+  VIRTUAL
+  BOTH
+}
+
+model PXEProfile {
+  id                    String           @id @default(cuid())
+  name                  String
+  templateType          TemplateType     @default(PRESEED)
+  osFamily              String           // DEBIAN, UBUNTU, ALMALINUX, OTHER
+  tags                  String[]
+  enabled               Boolean          @default(true)
+  
+  // Section 2: Installation Metadata
+  language              String?
+  timezone              String?
+  releaseVersion        String?
+  mirrorUrl             String?
+  httpDirectory         String?
+  driversUrl            String?
+  localCacheDir         String?
+  cachingPolicy         CachingPolicy    @default(SMART)
+  
+  // Section 3: PXE Boot Configuration
+  enableComboot         Boolean          @default(false)
+  ipxeBiosFile          String?
+  ipxeEfiFile           String?
+  dhcpKeepAliveMinutes  Int              @default(5)
+  
+  // Section 4: Network Configuration
+  networkMode           NetworkMode      @default(AUTO)
+  ipv4Behavior          String           @default("allow")
+  ipv6Behavior          String           @default("allow")
+  allowDifferentGateway Boolean          @default(false)
+  
+  // Section 5: Offering Rules
+  requireServerTags     String[]
+  excludeServerTags     String[]
+  requireUserRoles      String[]
+  excludeUserRoles      String[]
+  serverTargetType      ServerTargetType @default(BOTH)
+  
+  // Section 6: Completion Logic
+  completionEvent       CompletionEvent  @default(AFTER_PXE)
+  
+  // Section 7: Disk Layout
+  defaultDiskLayoutId   String?
+  fallbackToDefault     Boolean          @default(true)
+  forceDiskLayout       Boolean          @default(false)
+  
+  // Section 8: Scripts
+  postInstallScriptIds  String[]
+  firstBootScriptIds    String[]
+  enforceScripts        Boolean          @default(false)
+  hideOtherScripts      Boolean          @default(false)
+  
+  // Section 9: Feature Permissions
+  allowSetHostname      Boolean          @default(true)
+  allowSshKeyInjection  Boolean          @default(true)
+  allowSetRootPassword  Boolean          @default(true)
+  updateInventoryAfter  Boolean          @default(true)
+  
+  // Section 10: Content
+  bootScriptTemplate    String?
+  installTemplate       String?
+  diskLayoutTemplate    String?
+  defaultPackages       String?
+  customScripts         String?
+  
+  // Flags
+  isDestructive         Boolean          @default(false)
+  
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  diskRules             ProfileDiskLayoutRule[]
+  installs              PXEInstall[]
 }
 
 model DiskLayout {
@@ -480,3 +587,25 @@ model PXESettings {
   updatedAt       DateTime @updatedAt
 }
 
+
+enum MetricType {
+  CPU_TEMP
+  INLET_TEMP
+  EXHAUST_TEMP
+  FAN_RPM
+}
+
+model HardwareMetric {
+  id          String     @id @default(cuid())
+  serverId    String
+  metricType  MetricType
+  metricLabel String
+  value       Float
+  unit        String
+  createdAt   DateTime   @default(now())
+
+  server      DedicatedServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId, createdAt])
+  @@index([metricType])
+}

@@ -1,297 +1,350 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { RefreshCw, Save, Power, Network, Server, HardDrive } from "lucide-react";
-import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, MoreHorizontal, Pencil, Copy, Power, Trash2, Server, Wrench, HardDrive, AlertTriangle } from "lucide-react";
 
-interface PXESettings {
+interface PXEProfile {
     id: string;
-    interface: string;
-    dhcpRangeStart: string;
-    dhcpRangeEnd: string;
-    subnetMask: string;
-    leaseTime: string;
-    gateway: string;
-    dnsServer: string;
-    tftpRoot: string;
-    httpBootUrl: string;
+    name: string;
+    templateType: string;
+    osFamily: string;
+    tags: string[];
     enabled: boolean;
+    serverTargetType: string;
+    isDestructive: boolean;
+    updatedAt: string;
 }
 
-interface ServiceStatus {
-    active: boolean;
-    status: string;
-    details: string;
-    recentLogs: string;
-}
-
-export default function PXESettingsPage() {
-    const [settings, setSettings] = useState<PXESettings | null>(null);
-    const [status, setStatus] = useState<ServiceStatus | null>(null);
+export default function PXEManagerPage() {
+    const router = useRouter();
+    const [profiles, setProfiles] = useState<PXEProfile[]>([]);
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [restarting, setRestarting] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [profileToDelete, setProfileToDelete] = useState<PXEProfile | null>(null);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    async function fetchData() {
+    const fetchProfiles = async () => {
         try {
-            const [settingsRes, statusRes] = await Promise.all([
-                fetch("/api/admin/pxe/settings"),
-                fetch("/api/admin/pxe/status")
-            ]);
-
-            if (settingsRes.ok) {
-                setSettings(await settingsRes.json());
-            }
-            if (statusRes.ok) {
-                setStatus(await statusRes.json());
+            const res = await fetch("/api/admin/pxe/profiles");
+            if (res.ok) {
+                const data = await res.json();
+                setProfiles(data);
             }
         } catch (error) {
-            toast.error("Failed to fetch PXE settings");
+            console.error("Failed to fetch profiles:", error);
         } finally {
             setLoading(false);
         }
-    }
+    };
 
-    async function saveSettings() {
-        if (!settings) return;
-        setSaving(true);
+    useEffect(() => {
+        fetchProfiles();
+    }, []);
+
+    const handleDuplicate = async (profile: PXEProfile) => {
         try {
-            const res = await fetch("/api/admin/pxe/settings", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(settings)
+            const res = await fetch(`/api/admin/pxe/profiles/${profile.id}/duplicate`, {
+                method: "POST",
             });
-
             if (res.ok) {
-                toast.success("Settings saved and dnsmasq restarted");
-                fetchData();
-            } else {
-                toast.error("Failed to save settings");
+                fetchProfiles();
             }
         } catch (error) {
-            toast.error("Failed to save settings");
-        } finally {
-            setSaving(false);
+            console.error("Failed to duplicate:", error);
         }
-    }
+    };
 
-    async function restartService() {
-        setRestarting(true);
+    const handleToggleEnabled = async (profile: PXEProfile) => {
         try {
-            const res = await fetch("/api/admin/pxe/restart", { method: "POST" });
-            const data = await res.json();
-
-            if (data.success) {
-                toast.success("dnsmasq restarted successfully");
-                fetchData();
-            } else {
-                toast.error(data.message);
-            }
+            await fetch(`/api/admin/pxe/profiles/${profile.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ enabled: !profile.enabled }),
+            });
+            fetchProfiles();
         } catch (error) {
-            toast.error("Failed to restart dnsmasq");
-        } finally {
-            setRestarting(false);
+            console.error("Failed to toggle:", error);
         }
-    }
+    };
+
+    const handleDelete = async () => {
+        if (!profileToDelete) return;
+        try {
+            await fetch(`/api/admin/pxe/profiles/${profileToDelete.id}`, {
+                method: "DELETE",
+            });
+            fetchProfiles();
+        } catch (error) {
+            console.error("Failed to delete:", error);
+        } finally {
+            setDeleteDialogOpen(false);
+            setProfileToDelete(null);
+        }
+    };
+
+    // Filter profiles by tab
+    const osProfiles = profiles.filter(
+        (p) => ["KICKSTART", "PRESEED", "WINDOWS"].includes(p.templateType) && p.enabled
+    );
+    const rescueProfiles = profiles.filter(
+        (p) => p.templateType === "RESCUE" && p.enabled
+    );
+    const utilityProfiles = profiles.filter(
+        (p) => p.templateType === "UTILITY" && !p.isDestructive && p.enabled
+    );
+    const diskWipeProfiles = profiles.filter(
+        (p) => p.templateType === "UTILITY" && p.isDestructive && p.enabled
+    );
+    const disabledProfiles = profiles.filter((p) => !p.enabled);
+
+    const ProfileTable = ({ data }: { data: PXEProfile[] }) => (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Tags</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Offered For</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {data.length === 0 ? (
+                    <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                            No profiles found
+                        </TableCell>
+                    </TableRow>
+                ) : (
+                    data.map((profile) => (
+                        <TableRow key={profile.id}>
+                            <TableCell className="font-medium">{profile.name}</TableCell>
+                            <TableCell>
+                                <Badge variant="outline">{profile.templateType}</Badge>
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex gap-1 flex-wrap">
+                                    {profile.tags.slice(0, 3).map((tag) => (
+                                        <Badge key={tag} variant="secondary" className="text-xs">
+                                            {tag}
+                                        </Badge>
+                                    ))}
+                                    {profile.tags.length > 3 && (
+                                        <Badge variant="secondary" className="text-xs">
+                                            +{profile.tags.length - 3}
+                                        </Badge>
+                                    )}
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <Badge variant={profile.enabled ? "default" : "secondary"}>
+                                    {profile.enabled ? "Enabled" : "Disabled"}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>
+                                <span className="text-sm text-muted-foreground">
+                                    {profile.serverTargetType}
+                                </span>
+                            </TableCell>
+                            <TableCell>
+                                <span className="text-sm text-muted-foreground">
+                                    {new Date(profile.updatedAt).toLocaleDateString()}
+                                </span>
+                            </TableCell>
+                            <TableCell>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => router.push(`/dashboard/admin/pxe/${profile.id}`)}>
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleDuplicate(profile)}>
+                                            <Copy className="mr-2 h-4 w-4" />
+                                            Duplicate
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleToggleEnabled(profile)}>
+                                            <Power className="mr-2 h-4 w-4" />
+                                            {profile.enabled ? "Disable" : "Enable"}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            className="text-red-500"
+                                            onClick={() => {
+                                                setProfileToDelete(profile);
+                                                setDeleteDialogOpen(true);
+                                            }}
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                        </TableRow>
+                    ))
+                )}
+            </TableBody>
+        </Table>
+    );
 
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="container mx-auto py-6 space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">PXE Boot Settings</h1>
-                    <p className="text-muted-foreground">Configure DHCP/TFTP server for network booting</p>
+                    <h1 className="text-2xl font-bold">PXE Manager</h1>
+                    <p className="text-muted-foreground">Manage PXE boot profiles for bare-metal provisioning</p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={restartService} disabled={restarting}>
-                        <Power className="h-4 w-4 mr-2" />
-                        {restarting ? "Restarting..." : "Restart Service"}
-                    </Button>
-                    <Button onClick={saveSettings} disabled={saving}>
-                        <Save className="h-4 w-4 mr-2" />
-                        {saving ? "Saving..." : "Save Settings"}
-                    </Button>
-                </div>
+                <Button onClick={() => router.push("/dashboard/admin/pxe/new")}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Profile
+                </Button>
             </div>
 
-            {/* Service Status */}
-            <Card>
-                <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2">
-                            <Server className="h-5 w-5" />
-                            Service Status
-                        </CardTitle>
-                        <Badge variant={status?.active ? "default" : "destructive"}>
-                            {status?.active ? "Running" : "Stopped"}
-                        </Badge>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto max-h-32">
-                        {status?.details || "No status available"}
-                    </pre>
-                </CardContent>
-            </Card>
+            <Tabs defaultValue="os" className="space-y-4">
+                <TabsList>
+                    <TabsTrigger value="os" className="gap-2">
+                        <Server className="h-4 w-4" />
+                        Operating Systems
+                        <Badge variant="secondary" className="ml-1">{osProfiles.length}</Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="rescue" className="gap-2">
+                        <Wrench className="h-4 w-4" />
+                        Rescue Systems
+                        <Badge variant="secondary" className="ml-1">{rescueProfiles.length}</Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="utility" className="gap-2">
+                        <HardDrive className="h-4 w-4" />
+                        Utilities & Tools
+                        <Badge variant="secondary" className="ml-1">{utilityProfiles.length}</Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="diskwipe" className="gap-2">
+                        <AlertTriangle className="h-4 w-4" />
+                        Disk Wipe
+                        <Badge variant="secondary" className="ml-1">{diskWipeProfiles.length}</Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="disabled" className="gap-2">
+                        <Power className="h-4 w-4" />
+                        Disabled
+                        <Badge variant="secondary" className="ml-1">{disabledProfiles.length}</Badge>
+                    </TabsTrigger>
+                </TabsList>
 
-            {settings && (
-                <>
-                    {/* Enable/Disable */}
+                <TabsContent value="os">
                     <Card>
                         <CardHeader>
-                            <CardTitle>PXE Boot Service</CardTitle>
-                            <CardDescription>Enable or disable the PXE boot server</CardDescription>
+                            <CardTitle>Operating System Profiles</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex items-center space-x-4">
-                                <Switch
-                                    checked={settings.enabled}
-                                    onCheckedChange={(checked) => setSettings({ ...settings, enabled: checked })}
-                                />
-                                <Label>PXE Boot {settings.enabled ? "Enabled" : "Disabled"}</Label>
-                            </div>
+                            <ProfileTable data={osProfiles} />
                         </CardContent>
                     </Card>
+                </TabsContent>
 
-                    {/* Network Settings */}
+                <TabsContent value="rescue">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Network className="h-5 w-5" />
-                                Network Configuration
-                            </CardTitle>
+                            <CardTitle>Rescue System Profiles</CardTitle>
                         </CardHeader>
-                        <CardContent className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label>Network Interface</Label>
-                                <Input
-                                    value={settings.interface}
-                                    onChange={(e) => setSettings({ ...settings, interface: e.target.value })}
-                                    placeholder="ens19"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Subnet Mask</Label>
-                                <Input
-                                    value={settings.subnetMask}
-                                    onChange={(e) => setSettings({ ...settings, subnetMask: e.target.value })}
-                                    placeholder="255.255.255.0"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Gateway</Label>
-                                <Input
-                                    value={settings.gateway}
-                                    onChange={(e) => setSettings({ ...settings, gateway: e.target.value })}
-                                    placeholder="10.15.0.1"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>DNS Server</Label>
-                                <Input
-                                    value={settings.dnsServer}
-                                    onChange={(e) => setSettings({ ...settings, dnsServer: e.target.value })}
-                                    placeholder="8.8.8.8"
-                                />
-                            </div>
+                        <CardContent>
+                            <ProfileTable data={rescueProfiles} />
                         </CardContent>
                     </Card>
+                </TabsContent>
 
-                    {/* DHCP Settings */}
+                <TabsContent value="utility">
                     <Card>
                         <CardHeader>
-                            <CardTitle>DHCP Range</CardTitle>
-                            <CardDescription>IP address range for PXE clients</CardDescription>
+                            <CardTitle>Utilities & Tools</CardTitle>
                         </CardHeader>
-                        <CardContent className="grid gap-4 md:grid-cols-3">
-                            <div className="space-y-2">
-                                <Label>Range Start</Label>
-                                <Input
-                                    value={settings.dhcpRangeStart}
-                                    onChange={(e) => setSettings({ ...settings, dhcpRangeStart: e.target.value })}
-                                    placeholder="10.15.0.100"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Range End</Label>
-                                <Input
-                                    value={settings.dhcpRangeEnd}
-                                    onChange={(e) => setSettings({ ...settings, dhcpRangeEnd: e.target.value })}
-                                    placeholder="10.15.0.200"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Lease Time</Label>
-                                <Input
-                                    value={settings.leaseTime}
-                                    onChange={(e) => setSettings({ ...settings, leaseTime: e.target.value })}
-                                    placeholder="24h"
-                                />
-                            </div>
+                        <CardContent>
+                            <ProfileTable data={utilityProfiles} />
                         </CardContent>
                     </Card>
+                </TabsContent>
 
-                    {/* TFTP/HTTP Settings */}
+                <TabsContent value="diskwipe">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <HardDrive className="h-5 w-5" />
-                                Boot Settings
-                            </CardTitle>
+                            <CardTitle>Disk Wipe Profiles</CardTitle>
                         </CardHeader>
-                        <CardContent className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label>TFTP Root Directory</Label>
-                                <Input
-                                    value={settings.tftpRoot}
-                                    onChange={(e) => setSettings({ ...settings, tftpRoot: e.target.value })}
-                                    placeholder="/srv/tftp"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>HTTP Boot URL</Label>
-                                <Input
-                                    value={settings.httpBootUrl}
-                                    onChange={(e) => setSettings({ ...settings, httpBootUrl: e.target.value })}
-                                    placeholder="http://10.15.0.1:3000/api/pxe/ipxe"
-                                />
-                            </div>
+                        <CardContent>
+                            <ProfileTable data={diskWipeProfiles} />
                         </CardContent>
                     </Card>
+                </TabsContent>
 
-                    {/* Recent Logs */}
-                    {status?.recentLogs && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Recent Logs</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto max-h-48 whitespace-pre-wrap">
-                                    {status.recentLogs}
-                                </pre>
-                            </CardContent>
-                        </Card>
-                    )}
-                </>
-            )}
+                <TabsContent value="disabled">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Disabled Profiles</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ProfileTable data={disabledProfiles} />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Profile</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete &quot;{profileToDelete?.name}&quot;? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

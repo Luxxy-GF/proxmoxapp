@@ -30,20 +30,30 @@ const bootFileFunc = function (this: any, req: any, res: any) {
         // We can access current request via this._req
         // @ts-ignore
         const currentReq = this._req;
-        const mac = currentReq ? currentReq.chaddr : 'unknown';
+        const rawMac = currentReq ? currentReq.chaddr : 'unknown';
+        // Normalize MAC to xx:xx:xx:xx:xx:xx
+        const mac = rawMac.replace(/-/g, ':').toLowerCase();
 
         const userClass = req[77] ? req[77].toString() : '';
         const vendorClass = req[60] ? req[60].toString() : '';
         // Check if Option 175 (iPXE) is in the Parameter Request List (Option 55)
         const requestedOptions = req[55] || [];
-        const isIpxe = userClass.includes('iPXE') || vendorClass.includes('iPXE') || (Array.isArray(requestedOptions) && requestedOptions.includes(175));
 
-        console.log(`[DHCP] BootFile Check for ${mac}: UserClass=${userClass}, VendorClass=${vendorClass}, isIpxe=${isIpxe}`);
+        // iPXE detection:
+        // 1. User Class (77) contains "iPXE"
+        // 2. Option 175 is requested in Parameter Request List (55)
+        // 3. DHCP feature codes (Option 175 itself present? - rare in DISCOVER/REQUEST unless informing server)
+
+        const isIpxe = userClass.includes('iPXE') ||
+            (Array.isArray(requestedOptions) && requestedOptions.includes(175));
+
+        console.log(`[DHCP] BootFile Check for ${mac} (raw: ${rawMac}): UserClass='${userClass}', isIpxe=${isIpxe}`);
 
         // iPXE Detection
         if (isIpxe) {
             // Check if we need to loop. iPXE might request again.
             // If it's already iPXE, we instruct it to chainload our script.
+            // We MUST append the MAC address so the API knows who is asking.
             return `${HTTP_BOOT_URL}?mac=${mac}`;
         }
 
@@ -63,6 +73,9 @@ const bootFileFunc = function (this: any, req: any, res: any) {
             // Actually, usually default to ipxe.efi is fine for most UEFI servers.
         }
 
+        // Default to Legacy BIOS iPXE if unknown (most compatible chainloader)
+        // If it's UEFI, we should really serve ipxe.efi, but we need reliable arch detection.
+        // For Gen9/Gen10 servers in legacy mode, undionly.kpxe is correct.
         return 'undionly.kpxe';
     } catch (e) {
         console.error("[DHCP] BootFile Logic Error:", e);

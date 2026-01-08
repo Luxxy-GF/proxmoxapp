@@ -129,14 +129,9 @@ const data = {
       icon: LayoutDashboard, // Reuse or find better icon
     },
     {
-      title: "PXE Settings",
+      title: "PXE Manager",
       url: "/dashboard/admin/pxe",
       icon: Network,
-    },
-    {
-      title: "PXE Profiles",
-      url: "/dashboard/admin/pxe/profiles",
-      icon: ScrollText,
     },
   ],
 }

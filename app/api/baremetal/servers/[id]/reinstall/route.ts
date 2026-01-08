@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import crypto from 'crypto';
-import { runIpmiCommand } from "@/lib/baremetal/ipmi";
+import { runIpmiCommand, runIpmiCommandWithRetry } from "@/lib/baremetal/ipmi";
 import { decrypt } from "@/lib/baremetal/encryption";
 import { logDedicatedEvent } from "@/lib/baremetal/utils";
 
@@ -69,41 +69,42 @@ export async function POST(
                 const decryptedJson = decrypt(ipmiAssignment.connection.encryptedConfig);
                 const ipmiConfig = JSON.parse(decryptedJson);
 
-                await runIpmiCommand({
+                // Create credentials object
+                const creds = {
                     host: ipmiConfig.host,
                     user: ipmiConfig.user,
                     pass: ipmiConfig.pass
-                }, ['chassis', 'bootdev', 'pxe']);
+                };
 
-                // 3. Power Cycle
-                // 3. Smart Power Control
-                const result = await runIpmiCommand({
-                    host: ipmiConfig.host,
-                    user: ipmiConfig.user,
-                    pass: ipmiConfig.pass
-                }, ['chassis', 'power', 'status']);
+                // 3. FORCE OFF FIRST (Clean Slate)
+                // If the server is ON, turn it OFF and wait.
+                // This ensures the BMC is in a consistent state to accept boot flags.
+                const powerStatus = await runIpmiCommandWithRetry(creds, ['chassis', 'power', 'status'], 2, 1000);
+                const isOff = powerStatus.output?.toLowerCase().includes('is off');
 
-                const isOff = result.output?.toLowerCase().includes('is off');
-
-                if (isOff) {
-                    await runIpmiCommand({
-                        host: ipmiConfig.host,
-                        user: ipmiConfig.user,
-                        pass: ipmiConfig.pass
-                    }, ['chassis', 'power', 'on']);
-                } else {
-                    await runIpmiCommand({
-                        host: ipmiConfig.host,
-                        user: ipmiConfig.user,
-                        pass: ipmiConfig.pass
-                    }, ['chassis', 'power', 'reset']);
+                if (!isOff) {
+                    await runIpmiCommandWithRetry(creds, ['chassis', 'power', 'off'], 3, 2000);
+                    // Wait up to 20 seconds for it to actually turn off
+                    const turnedOff = await import("@/lib/baremetal/ipmi").then(m => m.waitForPowerStatus(creds, 'off', 10, 2000));
+                    if (!turnedOff) {
+                        throw new Error("Failed to power off server for reinstall preparation");
+                    }
                 }
 
-                await logDedicatedEvent(server.id, 'POWER', 'Triggered PXE boot and power cycle for reinstall');
-            } catch (e) {
+                // 4. Set bootdev to PXE (now that it's off)
+                await runIpmiCommandWithRetry(creds, ['chassis', 'bootdev', 'pxe'], 3, 2000);
+
+                // Wait for BMC to process the boot flag
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                // 5. Power ON (Cold Boot)
+                await runIpmiCommandWithRetry(creds, ['chassis', 'power', 'on'], 3, 2000);
+
+                await logDedicatedEvent(server.id, 'POWER', 'Triggered clean reinstall (Force OFF -> Set PXE -> Power ON)');
+            } catch (e: any) {
                 console.error("Failed to execute IPMI actions for reinstall", e);
-                // Don't fail the request, but log it. User might need to manually power cycle.
-                await logDedicatedEvent(server.id, 'ERROR', 'Failed to auto-restart via IPMI. Manual reboot required.');
+                // Don't fail the request, but log it.
+                await logDedicatedEvent(server.id, 'ERROR', `Failed to auto-restart via IPMI: ${e.message || e}`);
             }
         } else {
             await logDedicatedEvent(server.id, 'PXE', 'No IPMI connection found. Manual reboot required to start install.');

@@ -99,10 +99,11 @@ export async function GET(req: Request) {
             } else {
                 // Default Logic
                 if (profile.osFamily === 'UBUNTU') {
-                    // Example Ubuntu Autoinstall
-                    script += "kernel http://archive.ubuntu.com/ubuntu/dists/jammy/main/installer-amd64/current/legacy-images/netboot/ubuntu-installer/amd64/linux\n";
-                    script += `initrd http://archive.ubuntu.com/ubuntu/dists/jammy/main/installer-amd64/current/legacy-images/netboot/ubuntu-installer/amd64/initrd.gz\n`;
-                    script += `imgargs linux auto=true priority=critical url=${configUrl} interface=${mac}\n`;
+                    // Ubuntu - Using locally hosted casper netboot files from live server ISO
+                    const version = profile.name?.includes('24.04') ? '24.04' : '22.04';
+                    script += `kernel ${baseUrl}/ubuntu/${version}/vmlinuz\n`;
+                    script += `initrd ${baseUrl}/ubuntu/${version}/initrd\n`;
+                    script += `imgargs vmlinuz initrd=initrd auto=true priority=critical url=${configUrl} preseed/url=${configUrl}\n`;
                     script += "boot\n";
                 } else if (profile.osFamily === 'DEBIAN') {
                     // Debian 13 (Trixie) - currently testing

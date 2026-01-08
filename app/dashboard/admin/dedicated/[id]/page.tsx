@@ -13,9 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, Plus, Trash2, Check, ExternalLink } from "lucide-react";
+import { Loader2, RefreshCw, Plus, Trash2, Check, ExternalLink, HardDrive } from "lucide-react";
 import Link from "next/link";
 import { BareMetalConsole } from "@/components/console/BareMetalConsole";
+import { ServerPowerStatus } from "@/components/dedicated/ServerPowerStatus";
 
 export default function AdminDedicatedDetailsPage() {
     const { id } = useParams();
@@ -35,6 +36,7 @@ export default function AdminDedicatedDetailsPage() {
     const [ipmiUser, setIpmiUser] = useState("");
     const [ipmiPass, setIpmiPass] = useState("");
     const [savingIpmi, setSavingIpmi] = useState(false);
+    const [scanningHardware, setScanningHardware] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -193,6 +195,34 @@ export default function AdminDedicatedDetailsPage() {
         }
     };
 
+    const handleInventoryScan = async () => {
+        if (!confirm("This will reboot the server into a temporary image to scan hardware. The current OS will be stopped. Continue?")) return;
+
+        setScanningHardware(true);
+        try {
+            const res = await fetch(`/api/baremetal/servers/${id}/inventory`, {
+                method: "POST",
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to start inventory scan");
+
+            toast.success("Inventory scan started. Server rebooting...");
+
+            // Trigger reboot via power API
+            await fetch(`/api/baremetal/servers/${id}/power`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "reset" }), // Hard reset to force PXE catch
+            });
+
+            fetchData();
+        } catch (error: any) {
+            toast.error(error.message);
+        } finally {
+            setScanningHardware(false);
+        }
+    };
+
     if (loading) return <div className="p-10 flex justify-center"><Loader2 className="animate-spin" /></div>;
     if (!server) return <div className="p-10">Server not found</div>;
 
@@ -200,10 +230,25 @@ export default function AdminDedicatedDetailsPage() {
         <div className="p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{server.hostname}</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-3xl font-bold tracking-tight">{server.hostname}</h1>
+                        <ServerPowerStatus serverId={id as string} />
+                    </div>
                     <p className="text-muted-foreground font-mono">{server.macAddress}</p>
                 </div>
                 <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={handleInventoryScan}
+                        disabled={scanningHardware || server.status === 'INVENTORYING'}
+                    >
+                        {scanningHardware || server.status === 'INVENTORYING' ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <HardDrive className="mr-2 h-4 w-4" />
+                        )}
+                        {server.status === 'INVENTORYING' ? 'Scanning...' : 'Rescan Hardware'}
+                    </Button>
                     <Dialog>
                         <DialogTrigger asChild>
                             <Button>Open Console</Button>

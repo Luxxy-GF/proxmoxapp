@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import RFB from "@novnc/novnc/lib/rfb";
+
 import { Loader2 } from "lucide-react";
 
 interface BareMetalConsoleProps {
@@ -10,16 +10,21 @@ interface BareMetalConsoleProps {
 
 export function BareMetalConsole({ id }: BareMetalConsoleProps) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const rfbRef = useRef<RFB | null>(null);
+    const rfbRef = useRef<any>(null); // Type any to avoid importing type that depends on window
     const [status, setStatus] = useState<'initializing' | 'connecting' | 'connected' | 'disconnected' | 'error'>('initializing');
     const [errorMsg, setErrorMsg] = useState("");
 
     useEffect(() => {
         let mounted = true;
+        let rfbInstance: any = null;
 
         async function startSession() {
             try {
                 setStatus('initializing');
+
+                // Dynamic Import to avoid 'window is not defined' during SSR
+                const { default: RFB } = await import('@novnc/novnc/lib/rfb');
+
                 // 1. Request Session from Backend
                 const res = await fetch(`/api/baremetal/servers/${id}/console`, {
                     method: 'POST'
@@ -36,8 +41,6 @@ export function BareMetalConsole({ id }: BareMetalConsoleProps) {
                 if (!wsUrl || !mounted) return;
 
                 // Fix for localhost development:
-                // If the API returns localhost but we are on a remote IP (e.g. 10.x.x.x), 
-                // we must rewrite localhost to the current window hostname.
                 const urlObj = new URL(wsUrl);
                 if (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1') {
                     urlObj.hostname = window.location.hostname;
@@ -49,7 +52,7 @@ export function BareMetalConsole({ id }: BareMetalConsoleProps) {
                 // 2. Connect noVNC
                 if (containerRef.current) {
                     const rfb = new RFB(containerRef.current, wsUrl, {
-                        credentials: { password: "" } // No auth on the WS itself for MVP/Desktop bridge
+                        credentials: { password: "" }
                     });
 
                     rfb.addEventListener("connect", () => {
@@ -62,6 +65,7 @@ export function BareMetalConsole({ id }: BareMetalConsoleProps) {
                     });
 
                     rfbRef.current = rfb;
+                    rfbInstance = rfb;
                 }
 
             } catch (e: any) {
@@ -76,8 +80,8 @@ export function BareMetalConsole({ id }: BareMetalConsoleProps) {
 
         return () => {
             mounted = false;
-            if (rfbRef.current) {
-                rfbRef.current.disconnect();
+            if (rfbInstance) {
+                rfbInstance.disconnect();
             }
         };
     }, [id]);

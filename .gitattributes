@@ -1,1 +1,2 @@
 public/inventory/initrd filter=lfs diff=lfs merge=lfs -text
+public/ubuntu/22.04/initrd filter=lfs diff=lfs merge=lfs -text
