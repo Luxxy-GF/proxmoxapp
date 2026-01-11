@@ -25,6 +25,7 @@ model User {
   sessions      Session[]
   isos          Iso[]
   dedicatedServers DedicatedServer[]
+  consoleSessions ConsoleSession[]
 }
 
 model Account {
@@ -259,6 +260,8 @@ model IPPool {
   updatedAt   DateTime @updatedAt
 
   node        Node?          @relation(fields: [nodeId], references: [id])
+  dedicatedNode DedicatedNode? @relation(fields: [dedicatedNodeId], references: [id])
+  dedicatedNodeId String?
   allocations IPAllocation[]
 }
 
@@ -332,6 +335,30 @@ model DedicatedServer {
   installs      PXEInstall[]
   allocations   IPAllocation[]
   metrics       HardwareMetric[]
+  consoleSessions ConsoleSession[]
+  
+  dedicatedNode   DedicatedNode? @relation(fields: [dedicatedNodeId], references: [id])
+  dedicatedNodeId String?
+}
+
+model DedicatedNode {
+  id            String    @id @default(cuid())
+  name          String
+  address       String    // IP or Hostname
+  location      String?   // Physical location / Rack
+  port          Int       @default(3000)
+  apiKey        String?   // Optional manual API Key for Panel -> Agent
+  tokenSecret   String    // For Agent Auth
+  status        String    @default("OFFLINE")
+  
+  description   String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  servers       DedicatedServer[]
+  ipPools       IPPool[]
+  consoleSessions ConsoleSession[]
 }
 
 model DedicatedHardware {
@@ -507,6 +534,8 @@ model PXEProfile {
   diskLayoutTemplate    String?
   defaultPackages       String?
   customScripts         String?
+  lateCommandsTemplate  String?   // Template for preseed late_command with variables
+  firstBootScript       String?   // Script that runs on first boot via systemd
   
   // Flags
   isDestructive         Boolean          @default(false)
@@ -608,4 +637,31 @@ model HardwareMetric {
 
   @@index([serverId, createdAt])
   @@index([metricType])
+}
+
+// IPMI Remote Console Sessions
+model ConsoleSession {
+  id            String    @id @default(cuid())
+  serverId      String
+  userId        String
+  agentNodeId   String
+  containerId   String?   // Docker container ID
+  containerPort Int?      // Local port on Agent
+  consoleType   String    // 'web' | 'java'
+  token         String    @unique
+  status        String    @default("STARTING") // STARTING, ACTIVE, EXPIRED, TERMINATED
+  
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime
+  lastHeartbeat DateTime?
+  terminatedAt  DateTime?
+  
+  server        DedicatedServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentNode     DedicatedNode   @relation(fields: [agentNodeId], references: [id], onDelete: Cascade)
+
+  @@index([serverId])
+  @@index([userId])
+  @@index([token])
+  @@index([status])
 }

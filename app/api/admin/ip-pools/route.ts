@@ -11,8 +11,16 @@ export async function GET() {
 
     try {
         const pools = await prisma.iPPool.findMany({
-            where: { enabled: true },
-            select: { id: true, name: true, startIP: true, endIP: true, nodeId: true }
+            include: {
+                dedicatedNode: {
+                    select: {
+                        id: true,
+                        name: true,
+                        status: true
+                    }
+                }
+            },
+            orderBy: { name: 'asc' }
         });
         return NextResponse.json(pools);
     } catch (error) {

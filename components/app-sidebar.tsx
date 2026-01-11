@@ -124,6 +124,11 @@ const data = {
       icon: Server,
     },
     {
+      title: "Dedicated Nodes",
+      url: "/dashboard/admin/dedicated/nodes",
+      icon: Cpu,
+    },
+    {
       title: "Connections",
       url: "/dashboard/admin/connections",
       icon: LayoutDashboard, // Reuse or find better icon

@@ -16,6 +16,7 @@ import { ReinstallPane } from "@/components/dedicated/ReinstallPane";
 import { InventoryPane } from "@/components/dedicated/InventoryPane";
 import { ServerPowerStatus } from "@/components/dedicated/ServerPowerStatus";
 import { HardwareGraphs } from "@/components/dedicated/HardwareGraphs";
+import { ConsolePane } from "@/components/dedicated/ConsolePane";
 
 export default function DedicatedServerPage() {
     const { id } = useParams();
@@ -206,7 +207,7 @@ export default function DedicatedServerPage() {
                     <TabsTrigger value="power">Power</TabsTrigger>
                     <TabsTrigger value="reinstall">Reinstall</TabsTrigger>
                     <TabsTrigger value="activity">Activity</TabsTrigger>
-                    <TabsTrigger value="console" disabled>Console</TabsTrigger>
+                    <TabsTrigger value="console">Console</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6 mt-4">
@@ -371,6 +372,10 @@ export default function DedicatedServerPage() {
                             </div>
                         </CardContent>
                     </Card>
+                </TabsContent>
+
+                <TabsContent value="console" className="mt-4">
+                    <ConsolePane serverId={id as string} serverHostname={server.hostname} />
                 </TabsContent>
             </Tabs>
 

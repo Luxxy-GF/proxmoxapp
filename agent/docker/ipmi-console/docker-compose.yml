@@ -1,0 +1,33 @@
+---
+version: "3.8"
+
+services:
+  ipmi-console:
+    build: .
+    container_name: ipmi-console-test
+    restart: "no"
+    ports:
+      - "5800:5800"   # noVNC web interface
+      - "5900:5900"   # VNC direct connection
+    volumes:
+      # Mount app directory for JNLP files (optional)
+      - ./app:/app:ro
+      # Mount ISOs directory (optional)
+      - ./isos:/var/www/ISOs
+    environment:
+      # VNC password (optional)
+      - VNC_PASSWORD=
+      # BMC host for SSL cert extraction (for JNLP mode)
+      - backendHost=${BMC_HOST:-}
+      # BMC URL for web console mode
+      - BMC_URL=${BMC_URL:-https://10.0.10.80/}
+      # Java version override (java8u121, java-8-openjdk-amd64, java-1.11.0-openjdk-amd64)
+      - JAVA_VERSION=
+      # Fake date for expired cert bypass (e.g., "2020-01-01 12:00:00")
+      - fakeJavaDate=
+    logging:
+      driver: json-file
+      options:
+        max-file: "1"
+        max-size: "10m"
+...

@@ -31,11 +31,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const config = JSON.parse(configStr);
 
         // 3. Start Console Session (Docker)
-        // Todo: Detect if we want JAVA or HTML5. For now default to HTML5 (Chromium Kiosk)
-        // or pass as query param?
+        // Using JAVA (JNLP) console type - legacy Java applet viewer via noVNC
         const consoleSession = await startConsoleSession({
             serverId: id,
-            type: 'HTML5',
+            type: 'JAVA',
             bmcUrl: `https://${config.host}`, // Assume HTTPS
             bmcUser: config.user,
             bmcPass: config.pass

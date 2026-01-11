@@ -1,0 +1,80 @@
+# Java 8 Security Configuration - Relaxed for Legacy IPMI Consoles
+# This allows connecting to older BMCs with expired/self-signed certificates
+
+#
+# Security providers
+#
+security.provider.1=sun.security.provider.Sun
+security.provider.2=sun.security.rsa.SunRsaSign
+security.provider.3=sun.security.ec.SunEC
+security.provider.4=com.sun.net.ssl.internal.ssl.Provider
+security.provider.5=com.sun.crypto.provider.SunJCE
+security.provider.6=sun.security.jgss.SunProvider
+security.provider.7=com.sun.security.sasl.Provider
+security.provider.8=org.jcp.xml.dsig.internal.dom.XMLDSigRI
+security.provider.9=sun.security.smartcardio.SunPCSC
+
+#
+# Algorithm restrictions - DISABLED to allow legacy protocols
+#
+# jdk.certpath.disabledAlgorithms=
+# jdk.jar.disabledAlgorithms=
+# jdk.tls.disabledAlgorithms=
+
+#
+# Allow all TLS versions
+#
+jdk.tls.client.protocols=TLSv1,TLSv1.1,TLSv1.2
+
+#
+# Key and trust store settings
+#
+ssl.KeyManagerFactory.algorithm=SunX509
+ssl.TrustManagerFactory.algorithm=PKIX
+
+#
+# Keystore type
+#
+keystore.type=jks
+
+#
+# Policy defaults
+#
+policy.provider=sun.security.provider.PolicyFile
+policy.url.1=file:${java.home}/lib/security/java.policy
+policy.url.2=file:${user.home}/.java.policy
+policy.expandProperties=true
+policy.allowSystemProperty=true
+policy.ignoreIdentityScope=false
+
+#
+# Login configuration
+#
+login.configuration.provider=com.sun.security.auth.login.ConfigFile
+
+#
+# Security manager
+#
+package.access=sun.,com.sun.xml.internal.,com.sun.imageio.,com.sun.istack.internal.,com.sun.jmx.,com.sun.media.sound.,com.sun.naming.internal.,com.sun.proxy.,com.sun.corba.se.,com.sun.org.apache.bcel.internal.,com.sun.org.apache.regexp.internal.,com.sun.org.apache.xerces.internal.,com.sun.org.apache.xpath.internal.,com.sun.org.apache.xalan.internal.extensions.,com.sun.org.apache.xalan.internal.lib.,com.sun.org.apache.xalan.internal.res.,com.sun.org.apache.xalan.internal.templates.,com.sun.org.apache.xalan.internal.utils.,com.sun.org.apache.xalan.internal.xslt.,com.sun.org.apache.xalan.internal.xsltc.cmdline.,com.sun.org.apache.xalan.internal.xsltc.compiler.,com.sun.org.apache.xalan.internal.xsltc.trax.,com.sun.org.apache.xalan.internal.xsltc.util.,com.sun.org.apache.xml.internal.res.,com.sun.org.apache.xml.internal.security.,com.sun.org.apache.xml.internal.serializer.utils.,com.sun.org.apache.xml.internal.utils.,com.sun.org.glassfish.,com.oracle.xmlns.internal.,com.oracle.webservices.internal.,oracle.jrockit.jfr.,org.jcp.xml.dsig.internal.,jdk.internal.,jdk.nashorn.internal.,jdk.nashorn.tools.,com.sun.activation.registries.
+
+#
+# Disabled algorithms - COMMENTED OUT to allow legacy connections
+#
+# jdk.certpath.disabledAlgorithms=MD2, MD5, SHA1 jdkCA & usage TLSServer, \
+#     RSA keySize < 1024, DSA keySize < 1024, EC keySize < 224
+
+# jdk.jar.disabledAlgorithms=MD2, MD5, RSA keySize < 1024, DSA keySize < 1024
+
+# jdk.tls.disabledAlgorithms=SSLv3, RC4, DES, MD5withRSA, DH keySize < 1024, \
+#     EC keySize < 224, 3DES_EDE_CBC, anon, NULL
+
+#
+# Legacy algorithms - ENABLED
+#
+jdk.tls.legacyAlgorithms=K_NULL, C_NULL, M_NULL, DH_anon, ECDH_anon, RC4_128, RC4_40, DES_CBC, DES40_CBC, 3DES_EDE_CBC
+
+#
+# JNLP/WebStart settings
+#
+deployment.security.level=ALLOW_UNSIGNED
+deployment.security.mixcode=DISABLE

@@ -1,0 +1,35 @@
+<jnlp spec="1.0+" codebase="https://10.15.0.254:443/">
+  <information>
+    <title>Console</title>
+    <vendor>HP</vendor>
+    <description>Java Web Start Application</description>
+  </information>
+
+  <security>
+   <all-permissions/>
+  </security>
+
+  <resources>
+    <j2se version="1.6.0+" initial-heap-size="32M" max-heap-size="128M"/>
+    <jar href="/html/intgapp4_231.jar" main="true"/>
+  </resources>
+
+  <applet-desc name="INTGAPP" width="650" height="500" main-class="com.hp.ilo2.intgapp.intgapp">
+  	<param name="RCINFO0" value="MHgxDWZjYzYwNDAyM2UxNDZhYzI0YTdiN2M2ZGM3MzE0ZDQ3"/>
+	<param name="RCINFO1" value="53719d9a33470e2156f34d6d89e54db8"/>
+	<param name="RCINFO3" value="1"/>
+	<param name="RCINFO6" value="&quot;+rport+&quot;"/>
+	<param name="RCINFO7" value="35791394"/>
+	<param name="RCINFO8" value="1"/>
+	<param name="RCINFOA" value="1"/>
+	<param name="RCINFOB" value="A4E3F9D86FE5B1D076780BEEBC3FE09B"/>
+	<param name="RCINFOC" value="F29E12581A79FD660C565004EA8FD2BD"/>
+	<param name="RCINFOD" value="102603"/>
+	<param name="RCINFOM" value="1"/>
+	<param name="RCINFOMM" value="1"/>
+	<param name="RCINFON" value="0"/>
+	<param name="RCINFOO" value="3389"/>
+	<param name="RCINFOLANG" value="en"/>
+	<param name="INTGTITLE" value="Integrated Remote Console"/>
+  </applet-desc>
+</jnlp>

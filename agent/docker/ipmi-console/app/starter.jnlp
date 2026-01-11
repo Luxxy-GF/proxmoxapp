@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" codebase="https://10.0.10.80:443/">
+<information>
+    <title>Integrated Remote Console</title>
+    <vendor>HPE</vendor>
+    <offline-allowed></offline-allowed>
+</information>
+<security>
+    <all-permissions></all-permissions>
+</security>
+<resources>
+    <j2se version="1.5+" href="http://java.sun.com/products/autodl/j2se"></j2se>
+    <jar href="https://10.0.10.80/html/intgapp4_232.jar" main="false"></jar>
+</resources>
+<property name="deployment.trace.level property" value="basic"></property>
+<applet-desc main-class="com.hp.ilo2.intgapp.intgapp" name="iLOJIRC" documentbase="https://10.0.10.80/html/java_irc.html" width="1" height="1">
+    <param name="RCINFO1" value="efd6101bf7e1b0308e891529c27bdae6"></param>
+    <param name="RCINFOLANG" value="en"></param>
+    <param name="INFO0" value="5027e4d22ffe1d86c8313183bbc7babd"></param>
+    <param name="INFO1" value="17988"></param>
+    <param name="INFO2" value="composite"></param>
+</applet-desc>
+<update check="background"></update>
+</jnlp>

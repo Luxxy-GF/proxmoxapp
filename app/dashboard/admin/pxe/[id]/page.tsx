@@ -58,6 +58,8 @@ interface PXEProfile {
     diskLayoutTemplate: string | null;
     defaultPackages: string | null;
     customScripts: string | null;
+    lateCommandsTemplate: string | null;
+    firstBootScript: string | null;
     isDestructive: boolean;
 }
 
@@ -669,13 +671,35 @@ export default function PXEProfileEditPage({ params }: { params: Promise<{ id: s
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="customScripts">First-Boot Script</Label>
+                        <Label htmlFor="lateCommandsTemplate">Late Commands Template</Label>
+                        <p className="text-sm text-muted-foreground">Preseed late_command template. Variables: ${'{'}sshKeyCmds{'}'}, ${'{'}scriptB64{'}'}, ${'{'}unitB64{'}'}, ${'{'}server.macAddress{'}'}, ${'{'}callbackUrl{'}'}, etc.</p>
+                        <Textarea
+                            id="lateCommandsTemplate"
+                            value={(profile as any).lateCommandsTemplate || ""}
+                            onChange={(e) => updateField("lateCommandsTemplate" as any, e.target.value)}
+                            placeholder="in-target apt-get install -y curl; \\\n${sshKeyCmds}\n..."
+                            className="font-mono text-sm min-h-[200px]"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="firstBootScript">First-Boot Script</Label>
+                        <p className="text-sm text-muted-foreground">Script that runs on first boot via systemd. Variables: ${'{'}server.primaryIpv4{'}'}, ${'{'}server.hostname{'}'}, etc.</p>
+                        <Textarea
+                            id="firstBootScript"
+                            value={(profile as any).firstBootScript || ""}
+                            onChange={(e) => updateField("firstBootScript" as any, e.target.value)}
+                            placeholder="#!/bin/bash\n# First-boot provisioning script..."
+                            className="font-mono text-sm min-h-[200px]"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="customScripts">Custom Scripts (Legacy)</Label>
                         <Textarea
                             id="customScripts"
                             value={profile.customScripts || ""}
                             onChange={(e) => updateField("customScripts", e.target.value)}
                             placeholder="#!/bin/bash\n# Post-install commands..."
-                            className="font-mono text-sm min-h-[200px]"
+                            className="font-mono text-sm min-h-[150px]"
                         />
                     </div>
 

@@ -20,6 +20,8 @@ function generatePreseedFromProfile(
         installTemplate?: string | null;
         diskLayoutTemplate?: string | null;
         customScripts?: string | null;
+        firstBootScript?: string | null;
+        lateCommandsTemplate?: string | null;
         defaultPackages?: string | null;
         language?: string | null;
         timezone?: string | null;
@@ -126,92 +128,129 @@ d-i finish-install/reboot_in_progress note
 
 `;
 
-    // Late command for SSH keys and callback
-    let lateCommands: string[] = [];
+    // Late command generation
+    const profileAny = profile as any;
+    const serverAny = server as any;
 
-    // SSH keys
+    // Build SSH key commands for template replacement
+    let sshKeyCmds = '';
     if (sshKeys.length > 0) {
-        lateCommands.push('mkdir -p /target/root/.ssh');
-        lateCommands.push('chmod 700 /target/root/.ssh');
+        const keyCmds: string[] = [];
+        keyCmds.push('in-target mkdir -p /root/.ssh');
+        keyCmds.push('in-target chmod 700 /root/.ssh');
         for (const key of sshKeys) {
-            // Escape quotes in SSH keys
-            const escapedKey = key.replace(/"/g, '\\"');
-            lateCommands.push(`echo "${escapedKey}" >> /target/root/.ssh/authorized_keys`);
+            const escapedKey = key.replace(/'/g, "'\\''");
+            keyCmds.push(`in-target /bin/sh -c "echo '${escapedKey}' >> /root/.ssh/authorized_keys"`);
         }
-        lateCommands.push('chmod 600 /target/root/.ssh/authorized_keys');
+        keyCmds.push('in-target chmod 600 /root/.ssh/authorized_keys');
+        sshKeyCmds = keyCmds.join('; \\\n    ') + '; \\';
     }
 
-    // Custom scripts - use systemd service for first-boot execution
-    if (profile.customScripts) {
-        // Write script using base64 injection (safest way to handle special chars and avoid network/parser issues)
+    // Build first-boot script and systemd unit
+    let scriptB64 = '';
+    let unitB64 = '';
+    const firstBootScriptContent = profileAny.firstBootScript || profileAny.customScripts;
+
+    if (firstBootScriptContent) {
         let scriptContent = `#!/bin/bash
 # Auto-generated first-boot script for ${server.hostname}
-# Profile: ${profile.name}
 # This runs on first boot via systemd service
 
 set -e
-
-# Logging
-exec 1> /var/log/first-boot.log 2>&1
+exec > >(tee -a /var/log/first-boot.log) 2>&1
 
 echo "Starting first-boot script..."
 
-# Self-cleanup: disable service and remove script to prevent re-running
-systemctl disable first-boot.service 2>/dev/null || true
-rm -f /etc/systemd/system/first-boot.service
-rm -f /root/first-boot.sh
-
 `;
-        if ((profile as any).customScripts) {
-            let userScripts = (profile as any).customScripts as string;
+        // Variable replacement in first-boot script
+        let userScripts = firstBootScriptContent as string;
+        userScripts = userScripts.replace(/\$\{server\.primaryIpv4\}/g, serverAny.primaryIpv4 || '');
+        userScripts = userScripts.replace(/\$\{server\.gateway\}/g, serverAny.gateway || '');
+        userScripts = userScripts.replace(/\$\{server\.netmask\}/g, serverAny.netmask || '');
+        userScripts = userScripts.replace(/\$\{server\.hostname\}/g, serverAny.hostname || '');
+        userScripts = userScripts.replace(/\$\{server\.macAddress\}/g, serverAny.macAddress || '');
+        userScripts = userScripts.replace(/\$\{callbackUrl\}/g, callbackUrl);
+        userScripts = userScripts.replace(/\$\{installToken\}/g, token);
+        userScripts = userScripts.replace(/\$\{hostname\}/g, serverAny.hostname || '');
 
-            // Replace template variables
-            const serverAny = server as any;
-            userScripts = userScripts.replace(/\$\{server\.primaryIpv4\}/g, serverAny.primaryIpv4 || '');
-            userScripts = userScripts.replace(/\$\{server\.gateway\}/g, serverAny.gateway || '');
-            userScripts = userScripts.replace(/\$\{server\.netmask\}/g, serverAny.netmask || '');
-            userScripts = userScripts.replace(/\$\{server\.hostname\}/g, serverAny.hostname || '');
-            userScripts = userScripts.replace(/\$\{server\.macAddress\}/g, serverAny.macAddress || '');
+        scriptContent += userScripts;
+        scriptContent += `
 
-            userScripts = userScripts.replace(/\$PRIMARY_IPV4/g, serverAny.primaryIpv4 || '');
-            userScripts = userScripts.replace(/\$GATEWAY/g, serverAny.gateway || '');
-            userScripts = userScripts.replace(/\$NETMASK/g, serverAny.netmask || '');
-            userScripts = userScripts.replace(/\$HOSTNAME/g, serverAny.hostname || '');
-            userScripts = userScripts.replace(/\$MAC_ADDRESS/g, serverAny.macAddress || '');
+# Self-cleanup
+systemctl disable pve-install.service 2>/dev/null || systemctl disable first-boot.service 2>/dev/null || true
+rm -f /etc/systemd/system/pve-install.service /etc/systemd/system/first-boot.service
+rm -f /usr/local/bin/pve-install.sh /usr/local/bin/first-boot.sh
 
-            scriptContent += `# Custom first-boot commands\n${userScripts}\n\n`;
-            scriptContent += `# Signal completion\nwget -q -O /dev/null "${callbackUrl}&event=success" || true\n`;
-        }
+echo "First-boot script complete."
+`;
+        scriptB64 = Buffer.from(scriptContent).toString('base64');
 
-        const scriptBase64 = Buffer.from(scriptContent).toString('base64');
-        lateCommands.push(`echo '${scriptBase64}' | base64 -d > /target/root/first-boot.sh`);
-        lateCommands.push('chmod +x /target/root/first-boot.sh');
-
-        // Create systemd service using base64 (consistent and reliable)
         const systemdUnit = `[Unit]
 Description=First Boot Script
 After=network-online.target
 Wants=network-online.target
-ConditionPathExists=/root/first-boot.sh
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash /root/first-boot.sh
+ExecStart=/bin/bash /usr/local/bin/pve-install.sh
 RemainAfterExit=yes
 StandardOutput=journal+console
 
 [Install]
 WantedBy=multi-user.target`;
-        const systemdB64 = Buffer.from(systemdUnit).toString('base64');
-        lateCommands.push(`echo '${systemdB64}' | base64 -d > /target/etc/systemd/system/first-boot.service`);
-        lateCommands.push('chroot /target systemctl enable first-boot.service');
+        unitB64 = Buffer.from(systemdUnit).toString('base64');
     }
 
-    // Callback
-    lateCommands.push(`wget -q -O /dev/null "${callbackUrl}&event=late_command" || true`);
+    // Check if profile has lateCommandsTemplate
+    let lateCommandStr = '';
+    if (profileAny.lateCommandsTemplate) {
+        // Use profile's late commands template with variable interpolation
+        let templateLateCmd = profileAny.lateCommandsTemplate as string;
 
-    if (lateCommands.length > 0) {
-        preseed += `# Late Commands\nd-i preseed/late_command string ${lateCommands.join(' ; ')}\n`;
+        // Replace all template variables
+        templateLateCmd = templateLateCmd.replace(/\$\{sshKeyCmds\}/g, sshKeyCmds);
+        templateLateCmd = templateLateCmd.replace(/\$\{scriptB64\}/g, scriptB64);
+        templateLateCmd = templateLateCmd.replace(/\$\{unitB64\}/g, unitB64);
+        templateLateCmd = templateLateCmd.replace(/\$\{server\.macAddress\}/g, serverAny.macAddress || '');
+        templateLateCmd = templateLateCmd.replace(/\$\{server\.primaryIpv4\}/g, serverAny.primaryIpv4 || '');
+        templateLateCmd = templateLateCmd.replace(/\$\{server\.gateway\}/g, serverAny.gateway || '');
+        templateLateCmd = templateLateCmd.replace(/\$\{server\.netmask\}/g, serverAny.netmask || '');
+        templateLateCmd = templateLateCmd.replace(/\$\{server\.hostname\}/g, serverAny.hostname || '');
+        templateLateCmd = templateLateCmd.replace(/\$\{callbackUrl\}/g, callbackUrl);
+        templateLateCmd = templateLateCmd.replace(/\$\{installToken\}/g, token);
+        templateLateCmd = templateLateCmd.replace(/\$\{hostname\}/g, serverAny.hostname || '');
+
+        lateCommandStr = templateLateCmd;
+    } else {
+        // Fallback: build late commands array (old behavior)
+        const lateCommands: string[] = [];
+
+        // SSH keys
+        if (sshKeys.length > 0) {
+            lateCommands.push('mkdir -p /target/root/.ssh');
+            lateCommands.push('chmod 700 /target/root/.ssh');
+            for (const key of sshKeys) {
+                const escapedKey = key.replace(/"/g, '\\"');
+                lateCommands.push(`echo "${escapedKey}" >> /target/root/.ssh/authorized_keys`);
+            }
+            lateCommands.push('chmod 600 /target/root/.ssh/authorized_keys');
+        }
+
+        // First-boot script
+        if (scriptB64) {
+            lateCommands.push(`echo '${scriptB64}' | base64 -d > /target/usr/local/bin/pve-install.sh`);
+            lateCommands.push('chmod +x /target/usr/local/bin/pve-install.sh');
+            lateCommands.push(`echo '${unitB64}' | base64 -d > /target/etc/systemd/system/pve-install.service`);
+            lateCommands.push('chroot /target systemctl enable pve-install.service');
+        }
+
+        // Callback
+        lateCommands.push(`wget -q -O /dev/null "${callbackUrl}&event=late_command" || true`);
+        lateCommandStr = lateCommands.join(' ; ');
+    }
+
+    if (lateCommandStr) {
+        preseed += `# Late Commands\nd-i preseed/late_command string ${lateCommandStr}\n`;
     }
 
     return { content: preseed, rootPassword };

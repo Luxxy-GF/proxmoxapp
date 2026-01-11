@@ -107,6 +107,8 @@ export async function POST(req: Request) {
                 diskLayoutTemplate: body.diskLayoutTemplate,
                 defaultPackages: body.defaultPackages,
                 customScripts: body.customScripts,
+                lateCommandsTemplate: body.lateCommandsTemplate,
+                firstBootScript: body.firstBootScript,
 
                 // Flags
                 isDestructive: body.isDestructive ?? false,

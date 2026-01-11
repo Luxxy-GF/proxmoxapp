@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,7 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Loader2, Plus, RefreshCw } from "lucide-react";
+import { Loader2, Plus, RefreshCw, Server as ServerIcon } from "lucide-react";
+import { DedicatedServerActions } from "@/components/admin/dedicated-server-actions";
+
+interface DedicatedNode {
+    id: string;
+    name: string;
+}
 
 interface DedicatedServer {
     id: string;
@@ -19,10 +24,13 @@ interface DedicatedServer {
     status: string;
     user?: { email: string };
     createdAt: string;
+    dedicatedNodeId: string | null;
+    dedicatedNode?: DedicatedNode | null;
 }
 
 export default function AdminDedicatedPage() {
     const [servers, setServers] = useState<DedicatedServer[]>([]);
+    const [nodes, setNodes] = useState<DedicatedNode[]>([]);
     const [loading, setLoading] = useState(true);
     const [createOpen, setCreateOpen] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -32,22 +40,31 @@ export default function AdminDedicatedPage() {
     const [macAddress, setMacAddress] = useState("");
     const [rack, setRack] = useState("");
 
-    const fetchServers = async () => {
+    const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/baremetal/servers");
-            if (!res.ok) throw new Error("Failed to fetch");
-            const data = await res.json();
-            setServers(data);
+            const [serversRes, nodesRes] = await Promise.all([
+                fetch("/api/baremetal/servers"),
+                fetch("/api/baremetal/nodes")
+            ]);
+
+            if (!serversRes.ok) throw new Error("Failed to fetch servers");
+            if (!nodesRes.ok) throw new Error("Failed to fetch nodes");
+
+            const serversData = await serversRes.json();
+            const nodesData = await nodesRes.json();
+
+            setServers(serversData);
+            setNodes(nodesData);
         } catch (error) {
-            toast.error("Failed to load servers");
+            toast.error("Failed to load data");
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchServers();
+        fetchData();
     }, []);
 
     const handleCreate = async () => {
@@ -67,7 +84,7 @@ export default function AdminDedicatedPage() {
             toast.success("Server created");
             setCreateOpen(false);
             setHostname(""); setMacAddress(""); setRack("");
-            fetchServers();
+            fetchData();
         } catch (error: any) {
             toast.error(error.message);
         } finally {
@@ -75,7 +92,7 @@ export default function AdminDedicatedPage() {
         }
     };
 
-    // IPMI Dialog State
+    // IPMI Dialog State - Kept for legacy/direct management if needed
     const [ipmiOpen, setIpmiOpen] = useState(false);
     const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
     const [ipmiHost, setIpmiHost] = useState("");
@@ -84,7 +101,6 @@ export default function AdminDedicatedPage() {
 
     const openIpmiDialog = (server: DedicatedServer) => {
         setSelectedServerId(server.id);
-        // Reset fields (security: don't prefill pass, maybe prefill host/user if we had it, but API doesn't return it yet for list)
         setIpmiHost("");
         setIpmiUser("");
         setIpmiPass("");
@@ -117,7 +133,7 @@ export default function AdminDedicatedPage() {
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold tracking-tight">Dedicated Servers (Admin)</h1>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="icon" onClick={fetchServers}>
+                    <Button variant="outline" size="icon" onClick={fetchData}>
                         <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                     </Button>
                     <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -181,6 +197,7 @@ export default function AdminDedicatedPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Hostname</TableHead>
+                            <TableHead>Node</TableHead>
                             <TableHead>MAC</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Owner</TableHead>
@@ -191,6 +208,16 @@ export default function AdminDedicatedPage() {
                         {servers.map((server) => (
                             <TableRow key={server.id}>
                                 <TableCell className="font-medium">{server.hostname}</TableCell>
+                                <TableCell>
+                                    {server.dedicatedNode ? (
+                                        <div className="flex items-center gap-2">
+                                            <ServerIcon className="h-4 w-4 text-muted-foreground" />
+                                            {server.dedicatedNode.name}
+                                        </div>
+                                    ) : (
+                                        <span className="text-muted-foreground italic">Unassigned</span>
+                                    )}
+                                </TableCell>
                                 <TableCell className="font-mono text-sm">{server.macAddress}</TableCell>
                                 <TableCell>
                                     <Badge variant={
@@ -200,21 +227,25 @@ export default function AdminDedicatedPage() {
                                 </TableCell>
                                 <TableCell>{server.user?.email || "Unassigned"}</TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="sm" onClick={() => openIpmiDialog(server)} className="mr-2">
-                                        IPMI
-                                    </Button>
-                                    <Link href={`/dashboard/admin/dedicated/${server.id}`}>
-                                        <Button variant="outline" size="sm">Manage</Button>
-                                    </Link>
-                                    <Link href={`/dashboard/dedicated/${server.id}`}>
-                                        <Button variant="ghost" size="sm" className="ml-2">User View</Button>
-                                    </Link>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <Button variant="ghost" size="sm" onClick={() => openIpmiDialog(server)}>
+                                            IPMI
+                                        </Button>
+                                        <DedicatedServerActions
+                                            server={server}
+                                            nodes={nodes}
+                                            onUpdate={fetchData}
+                                        />
+                                        <Link href={`/dashboard/admin/dedicated/${server.id}`}>
+                                            <Button variant="outline" size="sm">Manage</Button>
+                                        </Link>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
                         {!loading && servers.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                                <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                                     No servers found.
                                 </TableCell>
                             </TableRow>

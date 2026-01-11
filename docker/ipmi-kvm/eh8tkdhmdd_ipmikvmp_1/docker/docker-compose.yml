@@ -1,0 +1,31 @@
+---
+version: "3.1"
+volumes:
+  eh8tkdhmdd_ipmikvmp_1:
+    driver: local
+    driver_opts:
+      type: overlay
+      o: lowerdir=/var/www/storage/ipmi-kvm-iso/public,upperdir=/var/www/storage/docker/ipmi-kvm/eh8tkdhmdd_ipmikvmp_1/overlay/upper1,workdir=/var/www/storage/docker/ipmi-kvm/eh8tkdhmdd_ipmikvmp_1/overlay/work1
+      device: overlay
+services:
+  eh8tkdhmdd_ipmikvmp_1:
+    build: /var/www/storage/docker/ipmi-kvm/eh8tkdhmdd_ipmikvmp_1/docker
+    restart: always
+    ports:
+    - 127.0.0.1:11455:5800
+    - 10957:5900
+    volumes:
+    - /var/www/storage/docker/ipmi-kvm/eh8tkdhmdd_ipmikvmp_1/app:/app:ro
+    - eh8tkdhmdd_ipmikvmp_1:/var/www/ISOs
+    environment:
+    - VNC_PASSWORD=f0ab2thdnt49
+    - JAVA_BIN_ARGUMENTS=
+    - JAVA_BIN_EXECUTION=
+    - backendHost=10.15.0.254
+    - fakeJavaDate=
+    logging:
+      driver: json-file
+      options:
+        max-file: "1"
+        max-size: 1m
+...

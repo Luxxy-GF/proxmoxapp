@@ -24,6 +24,7 @@ export async function GET(req: Request) {
             where: isAdmin ? {} : { userId: session.user.id },
             include: {
                 hardware: true,
+                dedicatedNode: true,
                 user: {
                     select: { name: true, email: true }
                 },
